@@ -293,6 +293,7 @@
     <span class="footer-tag">Hub Central</span>
     <div class="footer-chips">
       <span class="fchip">sessions.js</span>
+      <span class="fchip">workouts.js</span>
       <span class="fchip">localStorage</span>
       <span class="fchip">Auto-tracking</span>
     </div>
@@ -302,6 +303,7 @@
 </div>
 
 <script src="sessions.js"></script>
+<script src="workouts.js"></script>
 <script src="training.js"></script>
 <script>
   /* ── TABS ──────────────────────────────────────────────── */
@@ -335,21 +337,24 @@
 
   /* ── HUB ───────────────────────────────────────────────── */
   function buildCard(s) {
-    const filename   = `seance_${s.slug}.html`;
+    const url        = `seance.html?slug=${s.slug}`;
     const allHistory = s.exercises.flatMap(ex => T.getHistory(s.slug, ex));
     let lastStr = '';
     if (allHistory.length) {
       const last = allHistory.sort((a,b) => new Date(b.date)-new Date(a.date))[0];
       lastStr = new Date(last.date).toLocaleDateString('fr-FR');
     }
+    // PR : compare le meilleur kg du dernier log vs celui d'avant (format sets)
     const prCount = s.exercises.filter(ex => {
       const h = T.getHistory(s.slug, ex);
-      return h.length >= 2 && parseFloat(h[0].kg) > parseFloat(h[1].kg);
+      if (h.length < 2) return false;
+      const best = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
+      return best(h[0]) > best(h[1]);
     }).length;
 
     const a = document.createElement('a');
     a.className = 'session-card';
-    a.href      = filename;
+    a.href      = url;
     a.innerHTML = `
       <div class="card-top">
         <div class="card-icon">${s.icon}</div>
@@ -358,7 +363,7 @@
       <div class="card-body">
         <span class="card-badge">Groupe musculaire</span>
         <div class="card-title">${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</div>
-        <div class="card-filename">${filename}</div>
+        <div class="card-filename">${url}</div>
       </div>
       <div class="card-footer">
         <span class="card-tag">${s.tag}</span>
@@ -419,24 +424,30 @@
       const history = _filteredHistory(slug, ex).slice(0, 10).reverse();
       if (!history.length) return;
 
-      const last  = history[history.length - 1];
-      const prev  = history.length >= 2 ? history[history.length - 2] : null;
-      const dKg   = prev ? (parseFloat(last.kg||0) - parseFloat(prev.kg||0)) : 0;
-      const maxKg = T.getBestKg(slug, ex);
-      const sugg  = T.getNextSuggestion(slug, ex);
+      // Extrait le best kg de chaque entrée (format sets)
+      const _bestKgOfEntry = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
 
-      const kgs       = history.map(h => parseFloat(h.kg||0)).filter(v => v > 0);
+      const last    = history[history.length - 1];
+      const prev    = history.length >= 2 ? history[history.length - 2] : null;
+      const lastKg  = _bestKgOfEntry(last);
+      const prevKg  = prev ? _bestKgOfEntry(prev) : 0;
+      const dKg     = prev ? lastKg - prevKg : 0;
+      const maxKg   = T.getBestKg(slug, ex);
+      const sugg    = T.getNextSuggestion(slug, ex);
+      const entryCount = T.getHistory(slug, ex).length;
+
+      const kgs       = history.map(_bestKgOfEntry).filter(v => v > 0);
       const sparkline = kgs.length >= 2 ? buildSparkline(kgs) : '';
 
       const card = document.createElement('div');
       card.className = 'prog-card';
       card.innerHTML = `
         <div class="prog-card-title">${ex}</div>
-        <div class="prog-card-sub">${history.length} entrée(s)${_period ? ` — ${_period} derniers jours` : ''}</div>
+        <div class="prog-card-sub">${entryCount} entrée(s)${_period ? ` — ${_period} derniers jours` : ''}</div>
         ${sparkline ? `<div class="prog-chart">${sparkline}</div>` : ''}
         <div class="prog-stats">
           <div class="prog-stat">
-            <span class="prog-stat-val neutral">${last.kg || '—'} kg</span>
+            <span class="prog-stat-val neutral">${lastKg || '—'} kg</span>
             <span class="prog-stat-label">Dernière charge</span>
           </div>
           <div class="prog-stat">
@@ -501,18 +512,27 @@
       return;
     }
 
-    const maxKg = Math.max(...history.map(h => parseFloat(h.kg||0)));
+    // Helpers format sets
+    const _bestKg   = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
+    const _totalVol = entry => (entry.sets || []).reduce((sum, s) => sum + (parseFloat(s.kg)||0) * (parseInt(s.reps)||0), 0);
+    const _setsSummary = entry => (entry.sets || []).map(s =>
+      `${s.kg ? s.kg+'kg' : '—'} × ${s.reps ? s.reps+'r' : '—'}`
+    ).join(' · ');
+
+    const maxKg = Math.max(...history.map(_bestKg));
     const rows  = history.map((entry, i) => {
-      const prev  = history[i + 1];
-      const dKg   = prev ? parseFloat(entry.kg||0) - parseFloat(prev.kg||0) : null;
-      const isPR  = parseFloat(entry.kg||0) >= maxKg && parseFloat(entry.kg||0) > 0;
-      const d     = new Date(entry.date);
-      const vol   = (parseFloat(entry.kg||0) * parseInt(entry.reps||0)) || 0;
+      const prev    = history[i + 1];
+      const kg      = _bestKg(entry);
+      const kgPrev  = prev ? _bestKg(prev) : 0;
+      const dKg     = prev ? kg - kgPrev : null;
+      const isPR    = kg >= maxKg && kg > 0;
+      const vol     = _totalVol(entry);
+      const d       = new Date(entry.date);
+      const summary = _setsSummary(entry);
       return `<tr>
         <td>${d.toLocaleDateString('fr-FR')} <span style="color:var(--soft);font-size:10px">${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span></td>
-        <td style="font-weight:700">${entry.kg || '—'} kg</td>
-        <td>${entry.reps || '—'}</td>
-        <td>${entry.rir !== '' && entry.rir !== undefined ? entry.rir : '—'}</td>
+        <td style="font-weight:700">${kg || '—'} kg</td>
+        <td style="font-size:10px;color:var(--muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${summary}">${summary || '—'}</td>
         <td style="color:var(--soft);font-size:11px">${vol ? vol.toLocaleString('fr-FR') + ' kg' : '—'}</td>
         <td>${isPR ? '<span class="badge-pr">🏆 PR</span>' : dKg !== null ? `<span class="${dKg > 0 ? 'badge-up' : dKg < 0 ? 'badge-down' : ''}">${dKg > 0 ? '+' : ''}${dKg.toFixed(1)} kg</span>` : '—'}</td>
         <td><button class="hist-del-btn" data-idx="${i}" title="Supprimer cette entrée">🗑</button></td>
@@ -521,7 +541,7 @@
 
     content.innerHTML = `
       <table class="hist-table">
-        <thead><tr><th>Date</th><th>Charge</th><th>Reps</th><th>RIR</th><th>Volume</th><th>Évolution</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th>Meilleure charge</th><th>Sets</th><th>Volume</th><th>Évolution</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
 
@@ -532,7 +552,8 @@
         const entry = all[idx];
         if (!entry) return;
         const d = new Date(entry.date).toLocaleDateString('fr-FR');
-        if (!confirm(`Supprimer l'entrée du ${d} ?\n${entry.kg} kg × ${entry.reps} reps`)) return;
+        const kg = _bestKg(entry);
+        if (!confirm(`Supprimer l'entrée du ${d} ?\nMeilleure charge : ${kg} kg`)) return;
         T.deleteHistoryEntry(slug, ex, idx);
         renderHistoryTable();
         renderProgression();

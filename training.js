@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   training.js — Moteur partagé v2
+   training.js — Moteur partagé v3
    ═══════════════════════════════════════════════════════════════
    Modules :
      STORAGE      — lecture / écriture / suppression localStorage
@@ -8,7 +8,7 @@
      DATA         — export JSON, import JSON, reset
      TIMER        — chrono repos (sans fuite de setInterval)
      WORKOUT      — mode séance (sans double démarrage)
-     LOG UI       — tableau de log interactif
+     CARD LOG     — log par set intégré dans les cards d'exercice
    ═══════════════════════════════════════════════════════════════ */
 
 const T = {
@@ -32,13 +32,15 @@ const T = {
     return h.length ? h[0] : null;
   },
 
+  /**
+   * Sauvegarde une entrée par set (tableau de sets).
+   * data = { date, sets: [{kg, reps, rir}, ...] }
+   */
   saveLog(session, exName, data) {
     const history = this.getHistory(session, exName);
     history.unshift({
-      date: new Date().toISOString(),
-      kg:   this._num(data.kg),
-      reps: this._int(data.reps),
-      rir:  this._int(data.rir),
+      date: data.date || new Date().toISOString(),
+      sets: data.sets || [],
     });
     if (history.length > 30) history.pop();
     localStorage.setItem(this.storageKey(session, exName), JSON.stringify(history));
@@ -99,15 +101,21 @@ const T = {
      PROGRESSION
   ════════════════════════════════════════════════════════════ */
 
+  /**
+   * Comparaison best set de la nouvelle entrée vs meilleur set du dernier log.
+   * kg/reps = valeurs du set validé
+   */
   getProgressStatus(session, exName, kg, reps) {
     const last = this.getLast(session, exName);
     if (!last) return null;
+    // meilleur set du dernier log
+    const lastSets = last.sets || [];
+    const kgOld  = lastSets.length ? Math.max(...lastSets.map(s => this._num(s.kg) || 0)) : 0;
+    const repOld = lastSets.length ? Math.max(...lastSets.map(s => this._int(s.reps) || 0)) : 0;
     const kgNew  = this._num(kg);
-    const kgOld  = this._num(last.kg) || 0;
     const repNew = this._int(reps);
-    const repOld = this._int(last.reps) || 0;
     if (kgNew === '') return null;
-    const dKg   = kgNew  - kgOld;
+    const dKg   = kgNew - kgOld;
     const dReps = repNew !== '' ? repNew - repOld : 0;
     if (dKg > 0)   return { type: 'up',    msg: `+${dKg} kg vs dernière fois 🔥` };
     if (dKg < 0)   return { type: 'down',  msg: `${dKg} kg vs dernière fois` };
@@ -121,21 +129,39 @@ const T = {
     if (kgNum === '' || kgNum <= 0) return false;
     const history = this.getHistory(session, exName);
     if (!history.length) return false;
-    return kgNum > Math.max(...history.map(h => this._num(h.kg) || 0));
+    const allKgs = history.flatMap(h => (h.sets || []).map(s => this._num(s.kg) || 0));
+    return kgNum > Math.max(...allKgs);
   },
 
   getBestKg(session, exName) {
     const vals = this.getHistory(session, exName)
-      .map(h => this._num(h.kg))
+      .flatMap(h => (h.sets || []).map(s => this._num(s.kg)))
       .filter(v => v !== '' && v > 0);
     return vals.length ? Math.max(...vals) : null;
   },
 
+  getBestSet(session, exName) {
+    // meilleur set = plus haut volume (kg × reps) dans toute l'histoire
+    let best = null, bestVol = 0;
+    this.getHistory(session, exName).forEach(h => {
+      (h.sets || []).forEach(s => {
+        const v = (this._num(s.kg) || 0) * (this._int(s.reps) || 0);
+        if (v > bestVol) { bestVol = v; best = s; }
+      });
+    });
+    return best;
+  },
+
   getNextSuggestion(session, exName) {
     const last = this.getLast(session, exName);
-    if (!last || last.kg === '') return null;
-    const kg  = this._num(last.kg);
-    const rir = this._int(last.rir);
+    if (!last) return null;
+    // Prend le dernier set validé (rir le plus bas = set le plus intense)
+    const sets = last.sets || [];
+    if (!sets.length) return null;
+    const heaviest = sets.reduce((a, b) => (this._num(b.kg) || 0) > (this._num(a.kg) || 0) ? b : a, sets[0]);
+    const kg  = this._num(heaviest.kg);
+    const rir = this._int(heaviest.rir);
+    if (kg === '') return null;
     if (rir === '' || rir <= 1) return `Suggéré : +2.5 kg → ${(kg + 2.5).toFixed(1)} kg`;
     if (rir <= 2)               return `Maintiens ${kg} kg, vise +1 rep`;
     return                             `Maintiens ${kg} kg, améliore le contrôle`;
@@ -149,9 +175,10 @@ const T = {
     return exercises.reduce((sum, ex) => {
       const h = this.getHistory(session, ex);
       if (!h[entryIndex]) return sum;
-      const kg   = this._num(h[entryIndex].kg)   || 0;
-      const reps = this._int(h[entryIndex].reps) || 0;
-      return sum + kg * reps;
+      const sets = h[entryIndex].sets || [];
+      return sum + sets.reduce((s, set) => {
+        return s + (this._num(set.kg) || 0) * (this._int(set.reps) || 0);
+      }, 0);
     }, 0);
   },
 
@@ -211,7 +238,7 @@ const T = {
   _timerRemaining: 0,
 
   startTimer(seconds, label) {
-    this.stopTimer();                          // nettoie l'éventuel timer précédent
+    this.stopTimer();
     this._timerRemaining = seconds;
 
     let overlay = document.getElementById('timer-overlay');
@@ -298,13 +325,12 @@ const T = {
   _elapsedInterval:  null,
 
   startWorkout() {
-    if (this._workoutActive) return;           // ← protège contre double clic
+    if (this._workoutActive) return;
     this._workoutActive    = true;
     this._currentExIdx     = 0;
     this._exCards          = Array.from(document.querySelectorAll('.ex-card'));
     this._workoutStartTime = Date.now();
 
-    /* Supprime une éventuelle barre résiduelle */
     document.getElementById('workout-bar')?.remove();
 
     const bar = document.createElement('div');
@@ -322,13 +348,13 @@ const T = {
       </div>
       <div style="display:flex;gap:10px;align-items:center;">
         <span id="workout-expos" style="font-size:12px;color:#888;"></span>
+        <button onclick="T.prevExercise()" style="background:rgba(255,255,255,.06);border:1px solid #333;color:#888;padding:7px 14px;border-radius:4px;font-size:12px;cursor:pointer;">← Préc</button>
         <button onclick="T.nextExercise()" style="background:#e8390e;border:none;color:white;padding:7px 16px;border-radius:4px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:1px;">EXO SUIVANT →</button>
         <button onclick="T.stopWorkout()"  style="background:rgba(255,255,255,.06);border:1px solid #333;color:#888;padding:7px 14px;border-radius:4px;font-size:12px;cursor:pointer;">✕ Fin</button>
       </div>`;
     document.body.prepend(bar);
     document.body.style.paddingTop = '56px';
 
-    /* Chronomètre séance — stocké pour pouvoir être stoppé */
     if (this._elapsedInterval) clearInterval(this._elapsedInterval);
     this._elapsedInterval = setInterval(() => {
       const el = document.getElementById('workout-elapsed');
@@ -350,6 +376,13 @@ const T = {
     this._exCards[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const el = document.getElementById('workout-expos');
     if (el) el.textContent = `Exo ${idx + 1} / ${this._exCards.length}`;
+  },
+
+  prevExercise() {
+    if (this._currentExIdx > 0) {
+      this._currentExIdx--;
+      this._highlightExercise(this._currentExIdx);
+    }
   },
 
   nextExercise() {
@@ -384,96 +417,219 @@ const T = {
   },
 
   /* ════════════════════════════════════════════════════════════
-     LOG UI
-     • IDs basés sur l'index (ex0, ex1…) pour éviter les caractères
-       spéciaux dans les noms d'exercices (accents, →, etc.)
-     • Bouton 🗑 par ligne — confirmation + refresh complet
-     • Feedback live : PR en or, progression en vert/rouge
-     • Date+heure de la dernière entrée visible dans la colonne statut
+     CARD LOG — log par set intégré dans les cards d'exercice
+     ───────────────────────────────────────────────────────────
+     État distinct :
+       • "en cours d'édition" → champs input (state dans le DOM)
+       • "validé" → entrée persistée dans localStorage
+     Une validation ne peut être que explicite (bouton "Valider set").
+     Modification possible après validation (bouton "Modifier").
   ════════════════════════════════════════════════════════════ */
 
-  initLogTable(sessionName, exercises) {
-    const tbody = document.getElementById('log-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
+  /**
+   * Génère et injecte la zone de log dans une card d'exercice.
+   * @param {HTMLElement} card       - la .ex-card
+   * @param {string}      session    - slug de séance
+   * @param {string}      exName     - nom de l'exercice
+   * @param {Array}       planSets   - sets planifiés depuis workouts.js
+   */
+  initCardLog(card, session, exName, planSets) {
+    const last       = this.getLast(session, exName);
+    const lastSets   = last ? (last.sets || []) : [];
+    const suggestion = this.getNextSuggestion(session, exName);
+    const bestKg     = this.getBestKg(session, exName);
+    const lastDate   = last ? new Date(last.date).toLocaleDateString('fr-FR') : null;
 
-    exercises.forEach((exName, idx) => {
-      const last       = this.getLast(sessionName, exName);
-      const suggestion = this.getNextSuggestion(sessionName, exName);
-      const id         = `_ex${idx}`;           // ID DOM sans caractères spéciaux
+    // Zone log (wrapper injecté dans .ex-body)
+    const zone = document.createElement('div');
+    zone.className = 'card-log-zone';
 
-      const lKg   = (last && last.kg   !== '') ? last.kg   : '';
-      const lReps = (last && last.reps !== '') ? last.reps : '';
-      const lRir  = (last && last.rir  !== '') ? last.rir  : '';
-      const lDate = last ? new Date(last.date).toLocaleDateString('fr-FR') : '';
+    // ── Infos contextuelles (dernière perf + suggestion) ──
+    let ctxHtml = '';
+    if (lastDate && lastSets.length) {
+      const summary = lastSets.map(s =>
+        `${s.kg ? s.kg + ' kg' : '—'} × ${s.reps ? s.reps + ' r' : '—'}`
+      ).join(' · ');
+      ctxHtml += `<div class="clz-last">📅 ${lastDate} — ${summary}</div>`;
+    } else {
+      ctxHtml += `<div class="clz-last clz-new">Première donnée</div>`;
+    }
+    if (bestKg) ctxHtml += `<div class="clz-pr">🏆 PR : ${bestKg} kg</div>`;
+    if (suggestion) ctxHtml += `<div class="clz-suggest">${suggestion}</div>`;
 
-      const row = document.createElement('tr');
-      row.dataset.ex = exName;
-      row.innerHTML = `
-        <td class="log-ex-name">${exName}</td>
-        <td><input class="log-input" id="kg${id}"   type="number" step="0.5" min="0" placeholder="${lKg   || 'kg'}"   value="${lKg}"></td>
-        <td><input class="log-input" id="reps${id}" type="number"             min="0" placeholder="${lReps || 'reps'}" value="${lReps}"></td>
-        <td><input class="log-input" id="rir${id}"  type="number" max="5"     min="0" placeholder="${lRir  || 'RIR'}"  value="${lRir}"></td>
-        <td class="log-status" id="status${id}">
-          ${last
-            ? `<span class="log-prev">${lDate} · ${lKg}kg × ${lReps}r</span>`
-            : `<span class="log-new">Première donnée</span>`}
-          ${suggestion ? `<div class="log-suggest">${suggestion}</div>` : ''}
-        </td>
-        <td class="log-actions">
-          ${last ? `<button class="log-del-btn" title="Supprimer le dernier log">🗑</button>` : ''}
-        </td>`;
-      tbody.appendChild(row);
+    // ── Rows de sets à loguer ──
+    let setsHtml = '';
+    planSets.forEach((s, i) => {
+      setsHtml += `
+        <div class="clz-set-row" data-set-idx="${i}" data-ex="${exName}">
+          <span class="clz-set-label">${s.label}</span>
+          <div class="clz-fields">
+            <input class="clz-input clz-kg"   type="number" step="0.5" min="0" placeholder="${s.charge || 'kg'}"  inputmode="decimal">
+            <span class="clz-sep">×</span>
+            <input class="clz-input clz-reps" type="number"             min="0" placeholder="${s.reps  || 'reps'}" inputmode="numeric">
+            <span class="clz-sep clz-sep-rir">RIR</span>
+            <input class="clz-input clz-rir"  type="number" max="5"     min="0" placeholder="${s.rir   || '—'}"    inputmode="numeric">
+          </div>
+          <button class="clz-validate-btn" title="Valider ce set">✓</button>
+          <span class="clz-set-status"></span>
+        </div>`;
+    });
 
-      /* ── Bouton supprimer ── */
-      const delBtn = row.querySelector('.log-del-btn');
-      if (delBtn) {
-        delBtn.addEventListener('click', () => {
-          const entry = this.getLast(sessionName, exName);
-          if (!entry) return;
-          const d = new Date(entry.date).toLocaleDateString('fr-FR');
-          if (!confirm(`Supprimer le log du ${d} pour "${exName}" ?\n${entry.kg} kg × ${entry.reps} reps`)) return;
-          this.deleteLastLog(sessionName, exName);
-          this.initLogTable(sessionName, exercises);  // refresh complet
-        });
+    zone.innerHTML = `
+      <div class="clz-context">${ctxHtml}</div>
+      <div class="clz-sets">${setsHtml}</div>
+      <div class="clz-footer">
+        <button class="clz-save-all-btn">💾 Valider l'exercice</button>
+        <span class="clz-feedback"></span>
+      </div>`;
+
+    card.querySelector('.ex-body').appendChild(zone);
+
+    // ── État interne de l'exercice pour cette card ──
+    const state = {
+      sets:      planSets.map(() => ({ kg: '', reps: '', rir: '', validated: false })),
+      saved:     false,
+    };
+
+    const setRows   = zone.querySelectorAll('.clz-set-row');
+    const saveAllBtn = zone.querySelector('.clz-save-all-btn');
+    const feedback   = zone.querySelector('.clz-feedback');
+
+    // ── Wiring par set ──
+    setRows.forEach((row, i) => {
+      const kgInput   = row.querySelector('.clz-kg');
+      const repsInput = row.querySelector('.clz-reps');
+      const rirInput  = row.querySelector('.clz-rir');
+      const validateBtn = row.querySelector('.clz-validate-btn');
+      const statusEl  = row.querySelector('.clz-set-status');
+
+      // Pré-rempli depuis dernier log si disponible
+      if (lastSets[i]) {
+        kgInput.value   = lastSets[i].kg   ?? '';
+        repsInput.value = lastSets[i].reps ?? '';
+        rirInput.value  = lastSets[i].rir  ?? '';
       }
 
-      /* ── Feedback live sur saisie ── */
-      ['kg', 'reps', 'rir'].forEach(field => {
-        const input = document.getElementById(`${field}${id}`);
-        if (!input) return;
-        input.addEventListener('input', () => {
-          const kg       = document.getElementById(`kg${id}`)?.value;
-          const reps     = document.getElementById(`reps${id}`)?.value;
-          const statusEl = document.getElementById(`status${id}`);
-          if (!statusEl) return;
-          const prog = this.getProgressStatus(sessionName, exName, kg, reps);
-          const pr   = this.isPR(sessionName, exName, kg);
-          let html   = '';
-          if (pr)   html += `<span class="log-pr">🏆 PR !</span>`;
-          if (prog) html += `<span class="log-delta ${prog.type}">${prog.msg}</span>`;
-          if (!html && last) html = `<span class="log-prev">${lDate} · ${lKg}kg × ${lReps}r</span>`;
-          if (suggestion) html += `<div class="log-suggest">${suggestion}</div>`;
-          statusEl.innerHTML = html;
+      const updateSetState = () => {
+        state.sets[i].kg   = kgInput.value;
+        state.sets[i].reps = repsInput.value;
+        state.sets[i].rir  = rirInput.value;
+      };
+
+      // Feedback live à la saisie (pas encore validé)
+      const liveUpdate = () => {
+        updateSetState();
+        if (state.sets[i].validated) return; // déjà validé, pas de feedback live
+        const kg   = kgInput.value;
+        const reps = repsInput.value;
+        const pr   = this.isPR(session, exName, kg);
+        if (pr) {
+          statusEl.className = 'clz-set-status clz-status-pr';
+          statusEl.textContent = '🏆 PR';
+        } else if (kg || reps) {
+          statusEl.className = 'clz-set-status';
+          statusEl.textContent = '';
+        }
+      };
+
+      [kgInput, repsInput, rirInput].forEach(inp => inp.addEventListener('input', liveUpdate));
+
+      // ── Validation d'un set ──
+      const validateSet = () => {
+        updateSetState();
+        const { kg, reps } = state.sets[i];
+        if (kg === '' && reps === '') {
+          statusEl.className = 'clz-set-status clz-status-warn';
+          statusEl.textContent = '⚠ Vide';
+          return;
+        }
+        state.sets[i].validated = true;
+
+        // Verrouille les champs
+        [kgInput, repsInput, rirInput].forEach(inp => {
+          inp.readOnly = true;
+          inp.classList.add('clz-validated');
         });
+        validateBtn.textContent = '✎';
+        validateBtn.title       = 'Modifier ce set';
+        validateBtn.classList.add('clz-edit-mode');
+
+        const pr   = this.isPR(session, exName, kg);
+        const prog = this.getProgressStatus(session, exName, kg, reps);
+        let statusText = '✓';
+        if (pr) statusText = '🏆 PR !';
+        else if (prog && prog.type === 'up') statusText = '↑ ' + prog.msg;
+        statusEl.className = pr ? 'clz-set-status clz-status-pr' : (prog?.type === 'up' ? 'clz-set-status clz-status-up' : 'clz-set-status clz-status-ok');
+        statusEl.textContent = statusText;
+
+        feedback.className = 'clz-feedback';
+        feedback.textContent = '';
+      };
+
+      // ── Mode édition (déverrouillage après validation) ──
+      const editSet = () => {
+        state.sets[i].validated = false;
+        [kgInput, repsInput, rirInput].forEach(inp => {
+          inp.readOnly = false;
+          inp.classList.remove('clz-validated');
+        });
+        validateBtn.textContent = '✓';
+        validateBtn.title       = 'Valider ce set';
+        validateBtn.classList.remove('clz-edit-mode');
+        statusEl.className   = 'clz-set-status';
+        statusEl.textContent = '';
+        kgInput.focus();
+      };
+
+      validateBtn.addEventListener('click', () => {
+        if (state.sets[i].validated) editSet();
+        else validateSet();
       });
     });
+
+    // ── Valider tout l'exercice (sauvegarde storage) ──
+    saveAllBtn.addEventListener('click', () => {
+      const setsToSave = state.sets.map(s => ({
+        kg:   this._num(s.kg),
+        reps: this._int(s.reps),
+        rir:  this._int(s.rir),
+      })).filter(s => s.kg !== '' || s.reps !== '');
+
+      if (!setsToSave.length) {
+        feedback.className   = 'clz-feedback clz-fb-warn';
+        feedback.textContent = '⚠ Aucune donnée à sauvegarder';
+        return;
+      }
+
+      this.saveLog(session, exName, { date: new Date().toISOString(), sets: setsToSave });
+      state.saved = true;
+
+      // Met à jour les contextuels
+      const newLast = this.getLast(session, exName);
+      if (newLast) {
+        const d = new Date(newLast.date).toLocaleDateString('fr-FR');
+        const summary = (newLast.sets || []).map(s => `${s.kg ? s.kg + ' kg' : '—'} × ${s.reps ? s.reps + ' r' : '—'}`).join(' · ');
+        zone.querySelector('.clz-last').innerHTML = `📅 ${d} — ${summary}`;
+        zone.querySelector('.clz-last').classList.remove('clz-new');
+      }
+      const newBest = this.getBestKg(session, exName);
+      let prEl = zone.querySelector('.clz-pr');
+      if (newBest) {
+        if (!prEl) { prEl = document.createElement('div'); prEl.className = 'clz-pr'; zone.querySelector('.clz-context').appendChild(prEl); }
+        prEl.textContent = `🏆 PR : ${newBest} kg`;
+      }
+
+      feedback.className   = 'clz-feedback clz-fb-ok';
+      feedback.textContent = `✓ Sauvegardé (${setsToSave.length} set${setsToSave.length > 1 ? 's' : ''})`;
+      saveAllBtn.textContent = '✓ Exercice validé';
+      saveAllBtn.classList.add('clz-saved');
+      setTimeout(() => { feedback.textContent = ''; feedback.className = 'clz-feedback'; }, 3000);
+
+      // Dispatch pour que la page puisse rafraîchir stats
+      document.dispatchEvent(new CustomEvent('exercise-saved', { detail: { session, exName } }));
+    });
   },
 
-  saveAllLogs(sessionName, exercises) {
-    let saved = 0;
-    exercises.forEach((exName, idx) => {
-      const id   = `_ex${idx}`;
-      const kg   = document.getElementById(`kg${id}`)?.value;
-      const reps = document.getElementById(`reps${id}`)?.value;
-      const rir  = document.getElementById(`rir${id}`)?.value;
-      if (kg !== '' || reps !== '') {
-        this.saveLog(sessionName, exName, { kg, reps, rir });
-        saved++;
-      }
-    });
-    return saved;
-  },
 };
 
 /* ── NETTOYAGE À LA FERMETURE DE PAGE ─────────────────────── */
