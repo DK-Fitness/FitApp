@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiches d'Entraînement</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d; --surface: #141414; --card: #1a1a1a; --card-hover: #202020;
+    --border: #2a2a2a; --border-hover: #3a3a3a;
+    --accent: #e8390e; --accent2: #ff6b35;
+    --text: #f0f0f0; --muted: #888; --soft: #555;
+    --green: #22c55e; --red: #ef4444;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 40px 20px 60px; }
+  .page { max-width: 860px; margin: 0 auto; }
+
+  /* ── HEADER ── */
+  .header { border-bottom: 2px solid var(--accent); padding-bottom: 22px; margin-bottom: 32px; }
+  .header-top { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .header-left { display: flex; flex-direction: column; gap: 6px; }
+  .label-top { font-size: 11px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); }
+  .title { font-family: 'Bebas Neue', sans-serif; font-size: 72px; line-height: 1; letter-spacing: 2px; }
+  .subtitle { font-size: 13px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .header-right { display: flex; gap: 24px; align-items: flex-end; }
+  .stat-block { text-align: right; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .divider-v { width: 1px; height: 40px; background: var(--border); }
+
+  /* ── TAB NAV ── */
+  .tab-nav { display: flex; gap: 4px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .tab-btn { padding: 10px 20px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .2s, border-color .2s; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* ── SECTION TITLE ── */
+  .section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── SESSION CARDS ── */
+  .sessions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .session-card { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 22px 20px 20px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden; transition: background .2s, border-color .2s, transform .15s; cursor: pointer; }
+  .session-card::before { content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: radial-gradient(circle at top right, rgba(232,57,14,.07) 0%, transparent 70%); pointer-events: none; }
+  .session-card:hover { background: var(--card-hover); border-left-color: var(--accent2); border-color: var(--border-hover); transform: translateY(-2px); }
+  .session-card:hover .card-arrow { transform: translateX(4px); color: var(--accent2); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-icon { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: rgba(232,57,14,.06); }
+  .card-arrow { font-size: 18px; color: var(--soft); transition: transform .2s, color .2s; line-height: 1; margin-top: 2px; }
+  .card-body { display: flex; flex-direction: column; gap: 4px; }
+  .card-badge { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+  .card-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1.5px; line-height: 1; }
+  .card-filename { font-size: 11px; color: var(--soft); }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .card-tag { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; background: rgba(232,57,14,.1); color: var(--accent); border: 1px solid rgba(232,57,14,.25); }
+  .card-last { font-size: 10px; color: var(--soft); }
+  .card-pr { font-size: 10px; color: gold; font-weight: 700; }
+
+  /* ── PROGRESSION ── */
+  #tab-prog { display: none; }
+  .prog-controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .prog-selects { display: flex; gap: 10px; flex-wrap: wrap; }
+  .prog-select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 5px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; }
+  .prog-select:focus { outline: none; border-color: var(--accent); }
+
+  /* Period filter */
+  .period-filter { display: flex; gap: 4px; }
+  .period-btn { padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; transition: all .15s; }
+  .period-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .period-btn:hover:not(.active) { border-color: #444; color: var(--text); }
+
+  /* Volume card */
+  .vol-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+  .vol-block { display: flex; flex-direction: column; gap: 3px; }
+  .vol-val { font-family: 'Bebas Neue', sans-serif; font-size: 30px; line-height: 1; }
+  .vol-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .vol-delta { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
+  .vol-delta.up   { color: var(--green); background: rgba(34,197,94,.1); }
+  .vol-delta.down { color: var(--red);   background: rgba(239,68,68,.1); }
+  .vol-delta.eq   { color: var(--muted); }
+
+  .prog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .prog-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 18px 20px; }
+  .prog-card-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .prog-card-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+  .prog-chart { height: 60px; position: relative; margin-bottom: 12px; }
+  .prog-chart svg { width: 100% !important; height: 60px !important; }
+  .prog-stats { display: flex; gap: 14px; }
+  .prog-stat { display: flex; flex-direction: column; gap: 2px; }
+  .prog-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
+  .prog-stat-val.up      { color: var(--green); }
+  .prog-stat-val.down    { color: var(--red); }
+  .prog-stat-val.neutral { color: var(--text); }
+  .prog-stat-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .prog-suggestion { font-size: 11px; color: var(--accent2); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .no-data { font-size: 13px; color: var(--soft); font-style: italic; text-align: center; padding: 40px 20px; }
+
+  /* ── HISTORY TABLE ── */
+  .history-panel { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 20px 22px; margin-bottom: 14px; }
+  .panel-title { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .hist-table th { text-align: left; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 8px 8px 0; font-weight: 600; }
+  .hist-table td { padding: 6px 8px 6px 0; border-top: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  .hist-table tr:first-child td { border-top: none; }
+  .badge-up { color: var(--green); font-weight: 700; font-size: 11px; }
+  .badge-down { color: var(--red); font-weight: 700; font-size: 11px; }
+  .badge-pr { color: gold; font-weight: 700; font-size: 11px; }
+  .hist-del-btn { background: none; border: none; color: var(--soft); cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 3px; transition: color .15s; }
+  .hist-del-btn:hover { color: var(--red); }
+
+  /* ── DONNÉES TAB ── */
+  #tab-data { display: none; }
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+  .data-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 22px; }
+  .data-card-title { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+  .data-action-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .data-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 5px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .5px; cursor: pointer; border: none; transition: opacity .15s, transform .1s; text-decoration: none; white-space: nowrap; }
+  .btn:active { transform: scale(.97); }
+  .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger  { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); color: #ef4444; }
+  .btn-danger:hover  { background: rgba(239,68,68,.22); }
+  .btn-file-label { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 5px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); cursor: pointer; white-space: nowrap; transition: border-color .15s, color .15s; }
+  .btn-file-label:hover { border-color: var(--accent); color: var(--accent); }
+  .reset-sessions-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .import-result { font-size: 12px; font-weight: 700; display: none; padding: 8px 14px; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); border-radius: 5px; color: var(--green); }
+  .import-error  { font-size: 12px; font-weight: 700; display: none; padding: 8px 14px; background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); border-radius: 5px; color: var(--red); }
+
+  /* ── FOOTER ── */
+  .footer { margin-top: 32px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid var(--border); }
+  .footer-tag { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--soft); }
+  .footer-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fchip { font-size: 10px; color: var(--muted); background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; }
+  .footer-accent { color: var(--accent); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { grid-column: 1 / -1; background: var(--card); border: 1px dashed var(--border); border-radius: 6px; padding: 40px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .empty-icon { font-size: 32px; opacity: .4; }
+  .empty-text { font-size: 14px; color: var(--muted); }
+  .empty-hint { font-size: 11px; color: var(--soft); font-family: monospace; }
+
+  @media (max-width: 600px) {
+    .title { font-size: 52px; }
+    .header-right { display: none; }
+    .sessions-grid { grid-template-columns: 1fr; }
+    .prog-grid { grid-template-columns: 1fr; }
+    .data-grid { grid-template-columns: 1fr; }
+    .prog-controls { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-left">
+        <span class="label-top">Programme de Force</span>
+        <div class="title">FICHES<br>SÉANCES</div>
+        <div class="subtitle">Suivi d'entraînement — Musculation</div>
+      </div>
+      <div class="header-right">
+        <div class="stat-block">
+          <div class="stat-val" id="stat-count">—</div>
+          <div class="stat-label">Séances</div>
+        </div>
+        <div class="divider-v"></div>
+        <div class="stat-block">
+          <div class="stat-val" id="stat-sessions-done">—</div>
+          <div class="stat-label">Logs sauvés</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('hub')">🏠 Hub</button>
+    <button class="tab-btn" onclick="switchTab('prog')">📈 Progression</button>
+    <button class="tab-btn" onclick="switchTab('data')">💾 Données</button>
+  </div>
+
+  <!-- ── TAB HUB ── -->
+  <div id="tab-hub">
+    <div class="section-head">
+      <span class="section-label">Séances disponibles</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="sessions-grid" id="sessions-grid"></div>
+  </div>
+
+  <!-- ── TAB PROGRESSION ── -->
+  <div id="tab-prog">
+    <div class="prog-controls">
+      <div class="prog-selects">
+        <select class="prog-select" id="prog-session-select" onchange="renderProgression()"></select>
+        <select class="prog-select" id="prog-ex-select" onchange="renderHistoryTable()"></select>
+      </div>
+      <div class="period-filter">
+        <button class="period-btn active" data-period="0"  onclick="setPeriod(0)">Tout</button>
+        <button class="period-btn"        data-period="30" onclick="setPeriod(30)">30 j</button>
+        <button class="period-btn"        data-period="7"  onclick="setPeriod(7)">7 j</button>
+      </div>
+    </div>
+
+    <!-- Volume total -->
+    <div class="vol-card" id="vol-card" style="display:none">
+      <div class="vol-block">
+        <span class="vol-label">Volume séance actuelle</span>
+        <span class="vol-val" id="vol-last">—</span>
+      </div>
+      <div class="vol-block">
+        <span class="vol-label">Séance précédente</span>
+        <span class="vol-val" id="vol-prev">—</span>
+      </div>
+      <div id="vol-delta"></div>
+    </div>
+
+    <div class="section-head">
+      <span class="section-label">Vue d'ensemble</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="prog-grid" id="prog-grid"></div>
+
+    <div class="section-head">
+      <span class="section-label">Historique détaillé</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="history-panel">
+      <div class="panel-title" id="hist-title">Historique</div>
+      <div id="hist-content"></div>
+    </div>
+  </div>
+
+  <!-- ── TAB DONNÉES ── -->
+  <div id="tab-data">
+
+    <div class="section-head">
+      <span class="section-label">Sauvegarde</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="data-grid">
+
+      <div class="data-card">
+        <div class="data-card-title">Export</div>
+        <div class="data-action-row">
+          <button class="btn btn-secondary" onclick="T.exportJSON()">⬇ Télécharger JSON</button>
+        </div>
+        <div class="data-desc">Sauvegarde tous tes logs dans un fichier JSON. Garde ce fichier en lieu sûr — il contient tout ton historique.</div>
+      </div>
+
+      <div class="data-card">
+        <div class="data-card-title">Import</div>
+        <div class="data-action-row">
+          <label class="btn-file-label">
+            ⬆ Charger un backup
+            <input type="file" accept=".json" style="display:none" onchange="importData(this)">
+          </label>
+        </div>
+        <div class="data-desc">Restaure tes logs depuis un fichier exporté précédemment. Les données existantes sont conservées, seules les nouvelles clés sont ajoutées ou écrasées.</div>
+        <div class="import-result" id="import-result"></div>
+        <div class="import-error"  id="import-error"></div>
+      </div>
+
+    </div>
+
+    <div class="section-head">
+      <span class="section-label">Réinitialisation</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="data-card" style="margin-bottom:14px;">
+      <div class="data-card-title">Par séance</div>
+      <div class="reset-sessions-grid" id="reset-sessions-grid"></div>
+      <div class="data-desc">Efface tous les logs d'une séance spécifique. Irréversible.</div>
+    </div>
+    <div class="data-card">
+      <div class="data-card-title" style="color:var(--red)">Zone danger</div>
+      <div class="data-action-row">
+        <button class="btn btn-danger" onclick="resetAll()">🗑 Effacer TOUTES les données</button>
+      </div>
+      <div class="data-desc">Supprime l'intégralité de tes logs. Action irréversible — exporte d'abord si nécessaire.</div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-tag">Hub Central</span>
+    <div class="footer-chips">
+      <span class="fchip">sessions.js</span>
+      <span class="fchip">localStorage</span>
+      <span class="fchip">Auto-tracking</span>
+    </div>
+    <span class="footer-tag"><span class="footer-accent">TRAINING</span> LOG</span>
+  </div>
+
+</div>
+
+<script src="sessions.js"></script>
+<script src="training.js"></script>
+<script>
+  /* ── TABS ──────────────────────────────────────────────── */
+  function switchTab(name) {
+    ['hub','prog','data'].forEach(t => {
+      document.getElementById(`tab-${t}`).style.display = t === name ? '' : 'none';
+    });
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', ['hub','prog','data'][i] === name);
+    });
+    if (name === 'prog')  renderProgression();
+    if (name === 'data')  renderDataTab();
+  }
+
+  /* ── PERIOD FILTER ─────────────────────────────────────── */
+  let _period = 0;
+  function setPeriod(days) {
+    _period = days;
+    document.querySelectorAll('.period-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.period) === days);
+    });
+    renderProgression();
+  }
+
+  function _filteredHistory(slug, ex) {
+    const all = T.getHistory(slug, ex);
+    if (!_period) return all;
+    const cutoff = Date.now() - _period * 86400000;
+    return all.filter(h => new Date(h.date).getTime() >= cutoff);
+  }
+
+  /* ── HUB ───────────────────────────────────────────────── */
+  function buildCard(s) {
+    const filename   = `seance_${s.slug}.html`;
+    const allHistory = s.exercises.flatMap(ex => T.getHistory(s.slug, ex));
+    let lastStr = '';
+    if (allHistory.length) {
+      const last = allHistory.sort((a,b) => new Date(b.date)-new Date(a.date))[0];
+      lastStr = new Date(last.date).toLocaleDateString('fr-FR');
+    }
+    const prCount = s.exercises.filter(ex => {
+      const h = T.getHistory(s.slug, ex);
+      return h.length >= 2 && parseFloat(h[0].kg) > parseFloat(h[1].kg);
+    }).length;
+
+    const a = document.createElement('a');
+    a.className = 'session-card';
+    a.href      = filename;
+    a.innerHTML = `
+      <div class="card-top">
+        <div class="card-icon">${s.icon}</div>
+        <span class="card-arrow">→</span>
+      </div>
+      <div class="card-body">
+        <span class="card-badge">Groupe musculaire</span>
+        <div class="card-title">${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</div>
+        <div class="card-filename">${filename}</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-tag">${s.tag}</span>
+        <span class="${prCount > 0 ? 'card-pr' : 'card-last'}">${prCount > 0 ? `🏆 ${prCount} PR` : (lastStr || '—')}</span>
+      </div>`;
+    return a;
+  }
+
+  function initHub() {
+    const grid = document.getElementById('sessions-grid');
+    grid.innerHTML = '';
+    if (!SESSIONS.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Aucune séance configurée.</div><div class="empty-hint">Ajoute une entrée dans sessions.js</div></div>`;
+      return;
+    }
+    SESSIONS.forEach(s => grid.appendChild(buildCard(s)));
+    document.getElementById('stat-count').textContent = SESSIONS.length;
+    const totalLogs = SESSIONS.reduce((acc, s) =>
+      acc + s.exercises.reduce((a, ex) => a + T.getHistory(s.slug, ex).length, 0), 0);
+    document.getElementById('stat-sessions-done').textContent = totalLogs || '—';
+  }
+
+  /* ── PROGRESSION ───────────────────────────────────────── */
+  function renderProgression() {
+    const sel     = document.getElementById('prog-session-select');
+    const slug    = sel.value;
+    const session = SESSIONS.find(s => s.slug === slug);
+    if (!session) return;
+
+    /* Exercise select */
+    const exSel  = document.getElementById('prog-ex-select');
+    const curEx  = exSel.value;
+    exSel.innerHTML = session.exercises.map(ex =>
+      `<option value="${ex}" ${ex === curEx ? 'selected' : ''}>${ex}</option>`).join('');
+    exSel.onchange = renderHistoryTable;
+
+    /* Volume total */
+    const volLast = T.getSessionVolume(slug, session.exercises, 0);
+    const volPrev = T.getSessionVolume(slug, session.exercises, 1);
+    const volCard = document.getElementById('vol-card');
+    if (volLast > 0 || volPrev > 0) {
+      volCard.style.display = '';
+      document.getElementById('vol-last').textContent = volLast ? `${volLast.toLocaleString('fr-FR')} kg` : '—';
+      document.getElementById('vol-prev').textContent = volPrev ? `${volPrev.toLocaleString('fr-FR')} kg` : '—';
+      const deltaEl = document.getElementById('vol-delta');
+      if (volLast > 0 && volPrev > 0) {
+        const pct = Math.round(((volLast - volPrev) / volPrev) * 100);
+        const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'eq';
+        deltaEl.innerHTML = `<span class="vol-delta ${cls}">${pct > 0 ? '+' : ''}${pct}%</span>`;
+      } else { deltaEl.innerHTML = ''; }
+    } else { volCard.style.display = 'none'; }
+
+    /* Cards par exercice */
+    const grid = document.getElementById('prog-grid');
+    grid.innerHTML = '';
+
+    session.exercises.forEach(ex => {
+      const history = _filteredHistory(slug, ex).slice(0, 10).reverse();
+      if (!history.length) return;
+
+      const last  = history[history.length - 1];
+      const prev  = history.length >= 2 ? history[history.length - 2] : null;
+      const dKg   = prev ? (parseFloat(last.kg||0) - parseFloat(prev.kg||0)) : 0;
+      const maxKg = T.getBestKg(slug, ex);
+      const sugg  = T.getNextSuggestion(slug, ex);
+
+      const kgs       = history.map(h => parseFloat(h.kg||0)).filter(v => v > 0);
+      const sparkline = kgs.length >= 2 ? buildSparkline(kgs) : '';
+
+      const card = document.createElement('div');
+      card.className = 'prog-card';
+      card.innerHTML = `
+        <div class="prog-card-title">${ex}</div>
+        <div class="prog-card-sub">${history.length} entrée(s)${_period ? ` — ${_period} derniers jours` : ''}</div>
+        ${sparkline ? `<div class="prog-chart">${sparkline}</div>` : ''}
+        <div class="prog-stats">
+          <div class="prog-stat">
+            <span class="prog-stat-val neutral">${last.kg || '—'} kg</span>
+            <span class="prog-stat-label">Dernière charge</span>
+          </div>
+          <div class="prog-stat">
+            <span class="prog-stat-val ${dKg > 0 ? 'up' : dKg < 0 ? 'down' : 'neutral'}">${dKg > 0 ? '+' : ''}${dKg ? dKg.toFixed(1) : '='} kg</span>
+            <span class="prog-stat-label">Évolution</span>
+          </div>
+          <div class="prog-stat">
+            <span class="prog-stat-val" style="color:gold">${maxKg !== null ? maxKg + ' kg' : '—'}</span>
+            <span class="prog-stat-label">Record</span>
+          </div>
+        </div>
+        ${sugg ? `<div class="prog-suggestion">💡 ${sugg}</div>` : ''}`;
+      grid.appendChild(card);
+    });
+
+    if (!grid.children.length) {
+      grid.innerHTML = `<div class="no-data">Aucune donnée${_period ? ` sur les ${_period} derniers jours` : ''} pour cette séance.</div>`;
+    }
+
+    renderHistoryTable();
+  }
+
+  function buildSparkline(values) {
+    const W = 220, H = 56, pad = 4;
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = max - min || 1;
+    const pts = values.map((v, i) => ({
+      x: pad + (i / (values.length - 1)) * (W - pad * 2),
+      y: H - pad - ((v - min) / range) * (H - pad * 2),
+    }));
+    const polyPts = pts.map(p => `${p.x},${p.y}`).join(' ');
+    const areaPath = `M${pts[0].x},${H} ` + pts.map(p => `L${p.x},${p.y}`).join(' ') + ` L${pts[pts.length-1].x},${H} Z`;
+    const last  = pts[pts.length - 1];
+    const trend = values[values.length-1] >= values[0];
+    const color = trend ? '#22c55e' : '#ef4444';
+    const uid   = Math.random().toString(36).slice(2,7);
+    return `
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px;overflow:visible">
+        <defs>
+          <linearGradient id="sg${uid}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${color}" stop-opacity=".25"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#sg${uid})"/>
+        <polyline points="${polyPts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+        <circle cx="${last.x}" cy="${last.y}" r="3.5" fill="${color}"/>
+      </svg>`;
+  }
+
+  function renderHistoryTable() {
+    const slug = document.getElementById('prog-session-select').value;
+    const ex   = document.getElementById('prog-ex-select').value;
+    if (!ex) return;
+    const history = _filteredHistory(slug, ex);
+
+    document.getElementById('hist-title').textContent = `Historique — ${ex}`;
+    const content = document.getElementById('hist-content');
+
+    if (!history.length) {
+      content.innerHTML = `<div class="no-data" style="padding:20px 0">Aucune donnée${_period ? ` sur les ${_period} derniers jours` : ''} pour cet exercice.</div>`;
+      return;
+    }
+
+    const maxKg = Math.max(...history.map(h => parseFloat(h.kg||0)));
+    const rows  = history.map((entry, i) => {
+      const prev  = history[i + 1];
+      const dKg   = prev ? parseFloat(entry.kg||0) - parseFloat(prev.kg||0) : null;
+      const isPR  = parseFloat(entry.kg||0) >= maxKg && parseFloat(entry.kg||0) > 0;
+      const d     = new Date(entry.date);
+      const vol   = (parseFloat(entry.kg||0) * parseInt(entry.reps||0)) || 0;
+      return `<tr>
+        <td>${d.toLocaleDateString('fr-FR')} <span style="color:var(--soft);font-size:10px">${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span></td>
+        <td style="font-weight:700">${entry.kg || '—'} kg</td>
+        <td>${entry.reps || '—'}</td>
+        <td>${entry.rir !== '' && entry.rir !== undefined ? entry.rir : '—'}</td>
+        <td style="color:var(--soft);font-size:11px">${vol ? vol.toLocaleString('fr-FR') + ' kg' : '—'}</td>
+        <td>${isPR ? '<span class="badge-pr">🏆 PR</span>' : dKg !== null ? `<span class="${dKg > 0 ? 'badge-up' : dKg < 0 ? 'badge-down' : ''}">${dKg > 0 ? '+' : ''}${dKg.toFixed(1)} kg</span>` : '—'}</td>
+        <td><button class="hist-del-btn" data-idx="${i}" title="Supprimer cette entrée">🗑</button></td>
+      </tr>`;
+    }).join('');
+
+    content.innerHTML = `
+      <table class="hist-table">
+        <thead><tr><th>Date</th><th>Charge</th><th>Reps</th><th>RIR</th><th>Volume</th><th>Évolution</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+
+    content.querySelectorAll('.hist-del-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx   = parseInt(btn.dataset.idx);
+        const all   = T.getHistory(slug, ex);
+        const entry = all[idx];
+        if (!entry) return;
+        const d = new Date(entry.date).toLocaleDateString('fr-FR');
+        if (!confirm(`Supprimer l'entrée du ${d} ?\n${entry.kg} kg × ${entry.reps} reps`)) return;
+        T.deleteHistoryEntry(slug, ex, idx);
+        renderHistoryTable();
+        renderProgression();
+      });
+    });
+  }
+
+  /* ── DONNÉES TAB ───────────────────────────────────────── */
+  function renderDataTab() {
+    const grid = document.getElementById('reset-sessions-grid');
+    grid.innerHTML = '';
+    SESSIONS.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className   = 'btn btn-danger';
+      btn.textContent = `🗑 ${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}`;
+      btn.onclick = () => {
+        if (!confirm(`Effacer tous les logs de la séance "${s.slug}" ?`)) return;
+        T.resetSession(s.slug, s.exercises);
+        showToast(`Séance ${s.slug} réinitialisée.`);
+      };
+      grid.appendChild(btn);
+    });
+  }
+
+  function importData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const resultEl = document.getElementById('import-result');
+    const errorEl  = document.getElementById('import-error');
+    resultEl.style.display = errorEl.style.display = 'none';
+    T.importJSON(file).then(count => {
+      resultEl.textContent    = `✓ ${count} entrée(s) importée(s) avec succès.`;
+      resultEl.style.display  = 'block';
+      input.value             = '';
+      initHub();
+    }).catch(err => {
+      errorEl.textContent   = `✕ Erreur d'import : ${err.message}`;
+      errorEl.style.display = 'block';
+    });
+  }
+
+  function resetAll() {
+    if (!confirm('Effacer TOUTES les données d\'entraînement ?\nCette action est irréversible.')) return;
+    const n = T.resetAllData();
+    showToast(`${n} entrée(s) supprimée(s).`);
+    initHub();
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#22c55e;color:#0d0d0d;font-weight:700;font-size:13px;padding:10px 22px;border-radius:6px;z-index:9999;';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  /* ── INIT ──────────────────────────────────────────────── */
+  function init() {
+    initHub();
+    const sel = document.getElementById('prog-session-select');
+    sel.innerHTML = SESSIONS.map(s =>
+      `<option value="${s.slug}">${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</option>`).join('');
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('prog')) {
+      const target = params.get('prog');
+      if (SESSIONS.find(s => s.slug === target)) sel.value = target;
+      switchTab('prog');
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
