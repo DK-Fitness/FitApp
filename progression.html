@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progression</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0d; --card:#1a1a1a; --border:#2a2a2a; --accent:#e8390e; --text:#f0f0f0; --muted:#888; --green:#22c55e; --red:#ef4444; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; padding:36px 20px 60px; }
+  .page { max-width:1020px; margin:0 auto; }
+  .nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:8px; flex-wrap:wrap; }
+  .nav a { color:var(--muted); text-decoration:none; font-size:11px; letter-spacing:1px; text-transform:uppercase; }
+  .header { border-bottom:2px solid var(--accent); padding-bottom:16px; margin-bottom:22px; }
+  .label { color:var(--accent); font-size:11px; letter-spacing:4px; text-transform:uppercase; font-weight:700; }
+  .title { font-family:'Bebas Neue',sans-serif; font-size:66px; line-height:1; letter-spacing:2px; }
+  .subtitle { color:var(--muted); font-size:13px; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
+  .pbtn, .input, .select { background:#121212; color:var(--text); border:1px solid var(--border); border-radius:5px; padding:8px 12px; font-family:'DM Sans',sans-serif; font-size:13px; }
+  .pbtn { cursor:pointer; font-weight:700; text-transform:uppercase; letter-spacing:1px; font-size:11px; }
+  .pbtn.active { background:var(--accent); border-color:var(--accent); }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:16px; }
+  .card h3 { font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--accent); margin-bottom:12px; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
+  .kpi { background:var(--card); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:6px; padding:12px; }
+  .kpi .v { font-family:'Bebas Neue',sans-serif; font-size:30px; line-height:1; }
+  .kpi .l { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:2px; }
+  .kpi .d { font-size:11px; font-weight:700; margin-top:2px; }
+  .up { color:var(--green); } .down { color:var(--red); }
+  .bars { display:flex; align-items:flex-end; gap:4px; height:190px; margin-top:8px; }
+  .bar { flex:1; min-width:6px; border-radius:4px 4px 0 0; position:relative; opacity:.95; }
+  .bar.bar-vol { background:linear-gradient(180deg,#ff6b35,#e8390e); }
+  .bar.bar-dur { background:linear-gradient(180deg,#4ade80,#22c55e); }
+  .bar.bar-sess { background:linear-gradient(180deg,#7c83ff,#5a67ff); }
+  .bar.zero { opacity:.25; border:1px dashed #3a3a3a; background:#242424; }
+  .bar span { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:9px; white-space:nowrap; }
+  .chart-note { color:var(--muted); font-size:10px; margin-top:20px; letter-spacing:.4px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { border:1px solid var(--border); background:#141414; border-radius:4px; padding:6px 10px; font-size:12px; }
+  .chip b { color:var(--accent); }
+  .section-title { margin:14px 0 8px; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); }
+  .empty { color:var(--muted); font-style:italic; font-size:13px; padding:20px 0; }
+  @media (max-width: 900px){ .kpi-grid{grid-template-columns:1fr 1fr;} .grid3{grid-template-columns:1fr;} .title{font-size:52px;} }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="nav">
+    <a href="index.html">← Retour au hub</a>
+    <div style="display:flex;gap:10px;"><a href="profil.html">👤 Profil</a><a href="seance.html">⚡ Séance</a></div>
+  </div>
+  <div class="header">
+    <div class="label">Dashboard</div>
+    <div class="title">PROGRESSION</div>
+    <div class="subtitle" id="sub-profile">Analyse globale — volume, durée, tendances, exercices et séances</div>
+  </div>
+
+  <div class="controls">
+    <button class="pbtn active" data-p="7">7 jours</button>
+    <button class="pbtn" data-p="30">30 jours</button>
+    <button class="pbtn" data-p="0">All time</button>
+    <input class="input" id="custom-days" type="number" min="1" placeholder="X jours">
+    <button class="pbtn" id="apply-custom">Appliquer</button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="v" id="k-total-vol">—</div><div class="l">Kg totaux</div><div class="d" id="k-total-vol-d"></div></div>
+    <div class="kpi"><div class="v" id="k-total-min">—</div><div class="l">Temps total</div><div class="d" id="k-total-min-d"></div></div>
+    <div class="kpi"><div class="v" id="k-days">—</div><div class="l">Jours actifs</div><div class="d" id="k-days-d"></div></div>
+    <div class="kpi"><div class="v" id="k-sessions">—</div><div class="l">Séances</div><div class="d" id="k-sessions-d"></div></div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <h3>Poids total soulevé / jour</h3>
+      <div class="bars" id="bars-volume"></div>
+      <div class="chart-note">Axe continu journalier. Les jours sans séance restent visibles (0).</div>
+    </div>
+    <div class="card">
+      <h3>Temps entraînement / jour (min)</h3>
+      <div class="bars" id="bars-duration"></div>
+      <div class="chart-note">Durée agrégée par jour à partir de l'historique des séances.</div>
+    </div>
+    <div class="card">
+      <h3>Nombre de séances / jour</h3>
+      <div class="bars" id="bars-sessions"></div>
+      <div class="chart-note">Régularité hebdo visible: jours off vs jours actifs.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Suivi par exercice</div>
+  <div class="card"><div class="chips" id="by-exercise"></div><div class="empty" id="empty-ex" style="display:none;">Aucune donnée exercice sur cette période.</div></div>
+
+  <div class="section-title">Suivi par séance</div>
+  <div class="card"><div class="chips" id="by-session"></div><div class="empty" id="empty-session" style="display:none;">Aucune donnée séance sur cette période.</div></div>
+</div>
+
+<script src="sessions.js"></script>
+<script src="workouts.js"></script>
+<script src="training.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cloud.js"></script>
+<script>
+  if (window.C) C.requireAuthOrRedirect();
+  let PERIOD = 7;
+  function fmtMin(s){ return Math.round((s||0)/60) + ' min'; }
+  function keyDay(date){
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function parseKey(k) {
+    const [y,m,d] = k.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function mondayOf(d){
+    const day = d.getDay();
+    const shift = day === 0 ? -6 : 1 - day;
+    return addDays(startOfDay(d), shift);
+  }
+  function dayShort(d){
+    return ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
+  }
+  function buildRangeKeys(firstDataKey) {
+    const today = startOfDay(new Date());
+    let start;
+    if (PERIOD === 7) {
+      start = mondayOf(today);
+      return Array.from({length: 7}, (_, i) => keyDay(addDays(start, i)));
+    }
+    if (PERIOD === 0) {
+      if (!firstDataKey) {
+        start = mondayOf(today);
+      } else {
+        start = startOfDay(parseKey(firstDataKey));
+      }
+    } else {
+      start = addDays(today, -(PERIOD - 1));
+    }
+    const keys = [];
+    let cur = startOfDay(start);
+    while (cur <= today) {
+      keys.push(keyDay(cur));
+      cur = addDays(cur, 1);
+    }
+    return keys;
+  }
+  function collectAllDaily() {
+    const days = {};
+    const ensure = (k) => {
+      if (!days[k]) days[k] = { vol:0, dur:0, sessionCount:0, sessionSet:new Set(), byEx:{}, bySession:{} };
+      return days[k];
+    };
+    const allSessions = T.getAllSessions(SESSIONS, WORKOUTS);
+    allSessions.forEach(s => s.exercises.forEach(ex => {
+      T.getHistory(s.slug, ex).forEach(entry => {
+        const k = keyDay(entry.date);
+        const day = ensure(k);
+        const vol = (entry.sets || []).reduce((sum, set) => sum + T.getSetVolume(set), 0);
+        day.vol += vol;
+        day.byEx[ex] = (day.byEx[ex] || 0) + vol;
+        day.bySession[s.slug] = (day.bySession[s.slug] || 0) + vol;
+        day.sessionSet.add(s.slug);
+      });
+    }));
+    T.getWorkoutSessions().forEach(ws => {
+      const k = keyDay(ws.date);
+      const day = ensure(k);
+      day.dur += (ws.durationSec || 0);
+      day.sessionCount += 1;
+      if (ws.session) day.sessionSet.add(ws.session);
+      if (!day.bySession[ws.session] && ws.volume) {
+        day.bySession[ws.session] = (day.bySession[ws.session] || 0) + (ws.volume || 0);
+      }
+    });
+    Object.values(days).forEach(d => {
+      if (!d.sessionCount) d.sessionCount = d.sessionSet.size;
+    });
+    return days;
+  }
+  function drawBars(targetId, values, type, tooltipFmt) {
+    const el = document.getElementById(targetId);
+    el.innerHTML = '';
+    if (!values.length) { el.innerHTML = '<div class="empty">Aucune donnée.</div>'; return; }
+    const max = Math.max(...values.map(v => v.val), 1);
+    const showEvery = values.length <= 10 ? 1 : values.length <= 30 ? 3 : Math.ceil(values.length / 14);
+    values.forEach(v => {
+      const h = v.val <= 0 ? 6 : Math.max(8, Math.round((v.val / max) * 180));
+      const b = document.createElement('div');
+      b.className = `bar ${type} ${v.val <= 0 ? 'zero' : ''}`;
+      b.style.height = h + 'px';
+      b.title = `${v.label}: ${tooltipFmt(v.val)}`;
+      b.innerHTML = `<span>${v.idx % showEvery === 0 || v.idx === values.length - 1 ? v.short : ''}</span>`;
+      el.appendChild(b);
+    });
+  }
+  function render() {
+    const profile = T.getProfile();
+    const who = profile.username || profile.firstName || 'Athlète';
+    const bw = T.getBodyweight();
+    document.getElementById('sub-profile').textContent = `Analyse globale — ${who}${bw ? ` · PDC ${bw} kg` : ''}`;
+    const allDaily = collectAllDaily();
+    const firstDataKey = Object.keys(allDaily).sort()[0];
+    const rangeKeys = buildRangeKeys(firstDataKey);
+    const points = rangeKeys.map((k, idx) => {
+      const d = parseKey(k);
+      const day = allDaily[k] || { vol:0, dur:0, sessionCount:0, byEx:{}, bySession:{} };
+      return {
+        key: k,
+        idx,
+        label: d.toLocaleDateString('fr-FR'),
+        short: PERIOD === 7 ? dayShort(d) : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`,
+        vol: day.vol || 0,
+        dur: day.dur || 0,
+        sessions: day.sessionCount || 0,
+        byEx: day.byEx || {},
+        bySession: day.bySession || {}
+      };
+    });
+    drawBars('bars-volume', points.map(p => ({ idx:p.idx, label:p.label, short:p.short, val:p.vol })), 'bar-vol', v => `${Math.round(v).toLocaleString('fr-FR')} kg`);
+    drawBars('bars-duration', points.map(p => ({ idx:p.idx, label:p.label, short:p.short, val:Math.round((p.dur || 0) / 60) })), 'bar-dur', v => `${v} min`);
+    drawBars('bars-sessions', points.map(p => ({ idx:p.idx, label:p.label, short:p.short, val:p.sessions })), 'bar-sess', v => `${v} séance${v > 1 ? 's' : ''}`);
+
+    const totalVol = points.reduce((s,p)=>s+p.vol,0);
+    const totalDur = points.reduce((s,p)=>s+p.dur,0);
+    const sessionsCount = points.reduce((s,p)=>s+p.sessions,0);
+    const activeDays = points.filter(p => p.vol > 0 || p.dur > 0 || p.sessions > 0).length;
+    document.getElementById('k-total-vol').textContent = Math.round(totalVol).toLocaleString('fr-FR') + ' kg';
+    document.getElementById('k-total-min').textContent = fmtMin(totalDur);
+    document.getElementById('k-days').textContent = activeDays || '0';
+    document.getElementById('k-sessions').textContent = sessionsCount || '0';
+    document.getElementById('k-total-vol-d').className = 'd';
+    document.getElementById('k-total-min-d').className = 'd';
+    document.getElementById('k-days-d').className = 'd';
+    document.getElementById('k-sessions-d').className = 'd';
+    document.getElementById('k-total-vol-d').textContent = PERIOD ? `${PERIOD}j` : 'all time';
+    document.getElementById('k-total-min-d').textContent = PERIOD ? `${PERIOD}j` : 'all time';
+    document.getElementById('k-days-d').textContent = activeDays ? 'actifs' : '';
+    document.getElementById('k-sessions-d').textContent = sessionsCount ? 'logs' : '';
+
+    const exMap = {};
+    const sessionMap = {};
+    points.forEach((p) => {
+      Object.entries(p.byEx).forEach(([k,val]) => exMap[k] = (exMap[k] || 0) + val);
+      Object.entries(p.bySession).forEach(([k,val]) => sessionMap[k] = (sessionMap[k] || 0) + val);
+    });
+    const exTop = Object.entries(exMap).sort((a,b)=>b[1]-a[1]);
+    const ssTop = Object.entries(sessionMap).sort((a,b)=>b[1]-a[1]);
+    const exEl = document.getElementById('by-exercise');
+    const ssEl = document.getElementById('by-session');
+    exEl.innerHTML = exTop.map(([name,val]) => `<div class="chip"><b>${name}</b> · ${Math.round(val).toLocaleString('fr-FR')} kg</div>`).join('');
+    ssEl.innerHTML = ssTop.map(([name,val]) => `<div class="chip"><b>${name.toUpperCase()}</b> · ${Math.round(val).toLocaleString('fr-FR')} kg</div>`).join('');
+    document.getElementById('empty-ex').style.display = exTop.length ? 'none' : 'block';
+    document.getElementById('empty-session').style.display = ssTop.length ? 'none' : 'block';
+  }
+  document.querySelectorAll('.pbtn[data-p]').forEach(btn => btn.addEventListener('click', () => {
+    PERIOD = parseInt(btn.dataset.p, 10);
+    document.querySelectorAll('.pbtn[data-p]').forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  }));
+  document.getElementById('apply-custom').addEventListener('click', () => {
+    const v = parseInt(document.getElementById('custom-days').value, 10);
+    if (!isNaN(v) && v > 0) {
+      PERIOD = v;
+      document.querySelectorAll('.pbtn[data-p]').forEach(b => b.classList.remove('active'));
+      render();
+    }
+  });
+  render();
+</script>
+</body>
+</html>

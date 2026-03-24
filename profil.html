@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0d; --card:#1a1a1a; --border:#2a2a2a; --accent:#e8390e; --text:#f0f0f0; --muted:#888; --green:#22c55e; --red:#ef4444; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; padding:36px 20px 60px; }
+  .page { max-width:860px; margin:0 auto; }
+  .nav-back { display:inline-flex; margin-bottom:18px; color:var(--muted); text-decoration:none; font-size:11px; letter-spacing:1px; text-transform:uppercase; }
+  .header { border-bottom:2px solid var(--accent); padding-bottom:16px; margin-bottom:24px; }
+  .label { color:var(--accent); font-size:11px; letter-spacing:4px; text-transform:uppercase; font-weight:700; }
+  .title { font-family:'Bebas Neue',sans-serif; font-size:66px; line-height:1; letter-spacing:2px; }
+  .subtitle { color:var(--muted); font-size:13px; letter-spacing:1px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:20px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  .input, .select { background:#121212; border:1px solid var(--border); border-radius:5px; color:var(--text); padding:10px 12px; font-size:14px; font-family:'DM Sans',sans-serif; }
+  .input:focus, .select:focus { outline:none; border-color:var(--accent); }
+  .actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .btn { border:none; border-radius:5px; padding:10px 16px; font-weight:700; cursor:pointer; font-size:12px; letter-spacing:.4px; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  .msg { margin-top:10px; font-size:12px; font-weight:700; display:none; }
+  .ok { color:var(--green); }
+  .err { color:var(--red); }
+  @media (max-width: 680px) { .grid { grid-template-columns:1fr; } .title{font-size:52px;} }
+</style>
+</head>
+<body>
+  <div class="page">
+    <a href="index.html" class="nav-back">← Retour au hub</a>
+    <div class="header">
+      <div class="label">Utilisateur</div>
+      <div class="title">PROFIL</div>
+      <div class="subtitle">Base de personnalisation et de calculs (PDC, progression, tendances)</div>
+    </div>
+
+    <div class="card">
+      <form id="profile-form">
+        <div class="grid">
+          <div class="field"><label for="firstName">Prénom</label><input class="input" id="firstName" type="text"></div>
+          <div class="field"><label for="lastName">Nom</label><input class="input" id="lastName" type="text"></div>
+          <div class="field"><label for="username">Pseudo</label><input class="input" id="username" type="text"></div>
+          <div class="field"><label for="sex">Sexe</label>
+            <select class="select" id="sex">
+              <option value="">Non renseigné</option>
+              <option value="H">Homme</option>
+              <option value="F">Femme</option>
+              <option value="X">Autre</option>
+            </select>
+          </div>
+          <div class="field"><label for="heightCm">Taille (cm)</label><input class="input" id="heightCm" type="number" min="0"></div>
+          <div class="field"><label for="age">Âge</label><input class="input" id="age" type="number" min="0"></div>
+          <div class="field"><label for="weightKg">Poids (kg)</label><input class="input" id="weightKg" type="number" min="0" step="0.1"></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">💾 Enregistrer le profil</button>
+          <button class="btn btn-ghost" type="button" id="clear-btn">Réinitialiser le profil</button>
+          <a class="btn btn-ghost" href="progression.html" style="text-decoration:none;display:inline-flex;align-items:center;">📈 Ouvrir progression</a>
+        </div>
+      </form>
+      <div id="msg-ok" class="msg ok">Profil enregistré.</div>
+      <div id="msg-err" class="msg err"></div>
+    </div>
+  </div>
+
+  <script src="training.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="cloud.js"></script>
+  <script>
+    if (window.C) C.requireAuthOrRedirect();
+    const form = document.getElementById('profile-form');
+    const fields = ['firstName','lastName','username','sex','heightCm','age','weightKg'];
+    const okEl = document.getElementById('msg-ok');
+    const errEl = document.getElementById('msg-err');
+    function showOk() { okEl.style.display = 'block'; errEl.style.display = 'none'; setTimeout(() => okEl.style.display = 'none', 2200); }
+    function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; okEl.style.display = 'none'; }
+    function loadProfile() {
+      const p = T.getProfile();
+      fields.forEach(k => { const el = document.getElementById(k); if (el) el.value = p[k] ?? ''; });
+    }
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      try {
+        const next = {};
+        fields.forEach(k => next[k] = document.getElementById(k).value.trim());
+        T.saveProfile(next);
+        showOk();
+      } catch (err) { showErr(err.message || 'Erreur de sauvegarde'); }
+    });
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      if (!confirm('Réinitialiser le profil ?')) return;
+      T.saveProfile({});
+      loadProfile();
+      showOk();
+    });
+    loadProfile();
+  </script>
+</body>
+</html>

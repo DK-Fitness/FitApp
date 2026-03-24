@@ -17,6 +17,7 @@
     --muted:   #888;
     --soft:    #555;
     --green:   #22c55e;
+    --blue:    #5a67ff;
     --red:     #ef4444;
     --gold:    #f4b942;
   }
@@ -46,7 +47,7 @@
   .header {
     display: flex; align-items: flex-end; justify-content: space-between;
     border-bottom: 2px solid var(--accent);
-    padding-bottom: 18px; margin-bottom: 24px;
+    padding-bottom: 18px; margin-bottom: 20px;
     flex-wrap: wrap; gap: 16px;
   }
   .header-left { display: flex; flex-direction: column; gap: 4px; }
@@ -58,6 +59,35 @@
   .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; }
   .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
   .divider-v { width: 1px; height: 40px; background: var(--border); }
+
+  /* ── LIVE BANNER — métriques séance en cours ── */
+  .session-live-banner {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .slb-block {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 0 20px 0 0; margin: 0 20px 0 0;
+    border-right: 1px solid var(--border);
+  }
+  .slb-block:first-child { padding-left: 0; }
+  .slb-block:last-of-type { border-right: none; margin-right: 0; }
+  .slb-val { font-family: 'Bebas Neue', sans-serif; font-size: 24px; line-height: 1; }
+  .slb-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .slb-indicator {
+    margin-left: auto;
+    font-size: 12px; font-weight: 700;
+    padding: 5px 12px; border-radius: 4px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  }
 
   /* ── ACTION BAR ── */
   .action-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -93,14 +123,23 @@
     scroll-margin-top: 80px;
   }
   .ex-card:hover { border-left-color: var(--accent2); }
+  .ex-card.ex-done {
+    border-left-color: var(--blue);
+    background: rgba(90,103,255,.08);
+  }
 
   .ex-num {
     width: 48px; height: 48px; border-radius: 50%;
     border: 2px solid var(--accent);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent);
-    flex-shrink: 0;
+    flex-shrink: 0; transition: border-color .3s, color .3s, background .3s;
   }
+  .ex-card.ex-done .ex-num {
+    border-color: var(--blue); color: var(--blue);
+    background: rgba(90,103,255,.14);
+  }
+
   .ex-body { display: flex; flex-direction: column; gap: 8px; }
   .ex-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .ex-name { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
@@ -112,7 +151,7 @@
   }
   .ex-muscles { font-size: 11.5px; color: var(--muted); font-style: italic; }
 
-  /* Sets planifiés (affichage référence) */
+  /* Sets planifiés (référence) */
   .sets-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
   .set-chip {
     background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 4px;
@@ -147,7 +186,7 @@
   .rest-hint  { font-size: 9px; color: var(--accent2); margin-top: 2px; opacity: 0; transition: opacity .2s; text-align: right; }
 
   /* ═══════════════════════════════════════════════════════════
-     CARD LOG ZONE — styles du log intégré dans chaque card
+     CARD LOG ZONE
   ═══════════════════════════════════════════════════════════ */
 
   .card-log-zone {
@@ -157,75 +196,103 @@
     display: flex; flex-direction: column; gap: 10px;
   }
 
-  /* Contexte (dernière perf, PR, suggestion) */
-  .clz-context { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .clz-last    { font-size: 11px; color: var(--muted); }
-  .clz-new     { font-style: italic; color: var(--soft); }
-  .clz-pr      { font-size: 11px; font-weight: 700; color: var(--gold); }
-  .clz-suggest { font-size: 10px; color: var(--accent2); }
-
-  /* Sépareur visuel contexte / sets */
-  .clz-context + .clz-sets { border-top: 1px dashed rgba(255,255,255,.06); padding-top: 8px; }
+  /* Contexte */
+  .clz-context {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    padding: 8px 10px;
+    background: rgba(255,255,255,.02);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .clz-last { font-size: 11px; color: var(--muted); }
+  .clz-last-detail { color: var(--soft); }
+  .clz-new  { font-style: italic; color: var(--soft); font-size: 11px; }
+  .clz-pr   { font-size: 11px; font-weight: 700; color: var(--gold);
+               background: rgba(244,185,66,.08); border: 1px solid rgba(244,185,66,.2);
+               padding: 2px 8px; border-radius: 3px; }
+  .clz-suggest { font-size: 10px; color: var(--accent2);
+                  background: rgba(255,107,53,.08); border: 1px solid rgba(255,107,53,.2);
+                  padding: 2px 8px; border-radius: 3px; }
 
   /* Rows de sets */
-  .clz-sets { display: flex; flex-direction: column; gap: 7px; }
+  .clz-sets { display: flex; flex-direction: column; gap: 6px; }
 
   .clz-set-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 4px 0;
+    border-radius: 4px;
+    transition: background .15s;
   }
+  .clz-set-row.clz-drop-set { padding-left: 6px; border-left: 2px solid rgba(232,57,14,.4); }
+
+  @keyframes clzShake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+  }
+  .clz-shake { animation: clzShake .3s ease; }
+
   .clz-set-label {
     font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--accent); min-width: 32px; flex-shrink: 0;
+    color: var(--accent); min-width: 72px; flex-shrink: 0;
   }
-  .clz-fields {
-    display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap;
-  }
+  .clz-label-drop { color: var(--accent2); }
+
+  .clz-fields { display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap; }
 
   .clz-input {
     background: rgba(255,255,255,.05);
     border: 1px solid var(--border);
     border-radius: 4px; color: var(--text);
-    padding: 8px 10px; font-size: 13px;
+    padding: 9px 10px; font-size: 16px;
     font-family: 'DM Sans', sans-serif;
     width: 74px;
     transition: border-color .2s, background .2s;
-    /* Mobile: évite le zoom auto */
-    font-size: 16px;
+    text-align: center;
   }
-  .clz-input:focus { outline: none; border-color: var(--accent); }
-  .clz-input::placeholder { color: var(--soft); }
-  .clz-input[readonly], .clz-input.clz-validated {
+  .clz-input:focus { outline: none; border-color: var(--accent); background: rgba(232,57,14,.05); }
+  .clz-input::placeholder { color: var(--soft); font-size: 13px; }
+
+  /* État validé */
+  .clz-input.clz-validated {
     background: rgba(34,197,94,.07);
-    border-color: rgba(34,197,94,.25);
+    border-color: rgba(34,197,94,.3);
     color: var(--green);
   }
-  .clz-kg   { width: 80px; }
-  .clz-reps { width: 68px; }
-  .clz-rir  { width: 56px; }
+  /* Valeur pré-remplie (suggestion) — couleur différente avant focus */
+  .clz-input:not(:focus):not(.clz-validated):not(:placeholder-shown) {
+    border-color: rgba(255,255,255,.1);
+    color: var(--muted);
+  }
+
+  .clz-kg   { width: 82px; }
+  .clz-reps { width: 70px; }
+  .clz-rir  { width: 58px; }
 
   .clz-sep { font-size: 14px; color: var(--soft); font-weight: 600; }
-  .clz-sep-rir { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); }
+  .clz-sep-rir { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); }
 
   .clz-validate-btn {
     background: rgba(255,255,255,.05); border: 1px solid var(--border);
     color: var(--muted); border-radius: 4px; cursor: pointer;
-    padding: 7px 10px; font-size: 14px; font-weight: 700;
+    padding: 8px 12px; font-size: 14px; font-weight: 700;
     transition: background .15s, color .15s, border-color .15s;
-    flex-shrink: 0;
+    flex-shrink: 0; min-width: 38px; text-align: center;
   }
   .clz-validate-btn:hover { background: rgba(34,197,94,.15); border-color: var(--green); color: var(--green); }
-  .clz-validate-btn.clz-edit-mode { color: var(--accent2); border-color: rgba(255,107,53,.4); background: rgba(255,107,53,.07); }
+  .clz-validate-btn.clz-edit-mode {
+    color: var(--accent2); border-color: rgba(255,107,53,.4);
+    background: rgba(255,107,53,.07);
+  }
 
   .clz-set-status {
-    font-size: 11px; font-weight: 700;
-    min-width: 60px;
+    font-size: 11px; font-weight: 700; min-width: 80px; text-align: left;
+    white-space: nowrap;
   }
   .clz-status-ok   { color: var(--green); }
   .clz-status-pr   { color: var(--gold); }
   .clz-status-up   { color: var(--green); }
+  .clz-status-down { color: var(--red); }
   .clz-status-warn { color: var(--red); }
 
   /* Footer card log */
@@ -233,23 +300,11 @@
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     padding-top: 4px;
   }
-  .clz-save-all-btn {
-    background: var(--accent); border: none; color: white;
-    padding: 9px 18px; border-radius: 5px;
-    font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 12px;
-    letter-spacing: .5px; cursor: pointer; transition: opacity .15s, background .2s;
-  }
-  .clz-save-all-btn:hover { opacity: .9; }
-  .clz-save-all-btn.clz-saved {
-    background: rgba(34,197,94,.2);
-    border: 1px solid rgba(34,197,94,.4);
-    color: var(--green);
-  }
-  .clz-feedback { font-size: 11px; }
+  .clz-feedback { font-size: 12px; font-weight: 600; }
   .clz-fb-ok   { color: var(--green); }
   .clz-fb-warn { color: var(--red); }
 
-  /* ── BOTTOM : TIPS PANEL ── */
+  /* ── TIPS PANEL ── */
   .tips-panel {
     background: var(--card); border: 1px solid var(--border);
     border-radius: 6px; padding: 20px 22px; margin-bottom: 14px;
@@ -290,18 +345,18 @@
     }
     .rest-block { display: none; }
 
-    /* sur mobile, input plus grands */
-    .clz-input { font-size: 16px; padding: 10px 10px; width: 70px; }
+    .clz-input { padding: 10px 8px; }
     .clz-kg    { width: 76px; }
-    .clz-reps  { width: 64px; }
-    .clz-rir   { width: 52px; }
+    .clz-reps  { width: 66px; }
+    .clz-rir   { width: 54px; }
 
     .clz-validate-btn { padding: 9px 12px; }
-    .clz-save-all-btn { font-size: 13px; padding: 11px 18px; }
-
     .tips-grid { grid-template-columns: 1fr; }
-
     .btn { padding: 12px 16px; font-size: 13px; }
+
+    .session-live-banner { gap: 0; padding: 12px 14px; }
+    .slb-block { padding: 0 14px 0 0; margin: 0 14px 0 0; }
+    .slb-indicator { margin-left: 0; margin-top: 8px; width: 100%; text-align: center; }
   }
 </style>
 </head>
@@ -309,9 +364,6 @@
 <div class="page" id="page">
 
   <a href="index.html" class="nav-back">← Retour au hub</a>
-
-  <!-- Header, action bar, exercises grid, tips, footer
-       → tout généré par JS depuis workouts.js -->
   <div id="app-root"></div>
 
 </div>
@@ -319,12 +371,15 @@
 <script src="sessions.js"></script>
 <script src="workouts.js"></script>
 <script src="training.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cloud.js"></script>
 <script>
+if (window.C) C.requireAuthOrRedirect();
 /* ═══════════════════════════════════════════════════════════════
-   seance.html — Orchestrateur
-   Lit ?slug= dans l'URL → charge la séance depuis WORKOUTS
-   Génère tout le DOM depuis les données
-   Initialise les card logs
+   seance.html — Orchestrateur v4
 ═══════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -332,7 +387,8 @@
   /* ── 1. Lecture du slug ── */
   const params  = new URLSearchParams(location.search);
   const SESSION = params.get('slug') || '';
-  const workout = WORKOUTS[SESSION];
+  const allWorkouts = T.getAllWorkoutsMap(WORKOUTS);
+  const workout = allWorkouts[SESSION];
 
   if (!workout) {
     document.getElementById('app-root').innerHTML =
@@ -345,13 +401,13 @@
   const exercises     = workout.exercises;
   const exerciseNames = exercises.map(e => e.name);
 
-  /* ── 2. Génère le header ── */
+  /* ── 2. Header ── */
   function renderHeader() {
     const prs = exerciseNames.filter(name => {
       const h = T.getHistory(SESSION, name);
       if (h.length < 2) return false;
-      const curr = Math.max(...(h[0].sets || []).map(s => parseFloat(s.kg) || 0));
-      const prev = Math.max(...(h[1].sets || []).map(s => parseFloat(s.kg) || 0));
+      const curr = Math.max(0, ...((h[0].sets || []).map(s => parseFloat(s.kg) || 0)));
+      const prev = Math.max(0, ...((h[1].sets || []).map(s => parseFloat(s.kg) || 0)));
       return curr > prev;
     });
     return `
@@ -375,16 +431,43 @@
       </div>`;
   }
 
-  /* ── 3. Action bar ── */
-  function renderActionBar() {
+  /* ── 3. Live Banner ── */
+  function renderLiveBanner() {
+    const volPrev = T.getSessionVolume(SESSION, exerciseNames, 1);
     return `
-      <div class="action-bar">
-        <button class="btn btn-primary" onclick="T.startWorkout()">⚡ Start Workout</button>
-        <a href="index.html?prog=${SESSION}" class="btn btn-ghost">📈 Progression</a>
+      <div class="session-live-banner" id="session-live-banner">
+        <div class="slb-block">
+          <span class="slb-val" id="live-vol">—</span>
+          <span class="slb-label">Volume séance</span>
+        </div>
+        <div class="slb-block">
+          <span class="slb-val" id="live-sets">—</span>
+          <span class="slb-label">Sets validés</span>
+        </div>
+        <div class="slb-block">
+          <span class="slb-val" id="live-prs" style="color:var(--gold)">—</span>
+          <span class="slb-label">PR en cours</span>
+        </div>
+        <div class="slb-block">
+          <span class="slb-val" id="live-delta" style="color:var(--soft)">—</span>
+          <span class="slb-label">vs précédente</span>
+        </div>
+        <span class="slb-indicator" id="live-indicator">Commence le log</span>
       </div>`;
   }
 
-  /* ── 4. Cards d'exercice (sans le log — injecté après) ── */
+  /* ── 4. Action bar ── */
+  function renderActionBar() {
+    return `
+      <div class="action-bar">
+        <button class="btn btn-primary" id="start-workout-btn" onclick="startSession()">⚡ Start Workout</button>
+        <button class="btn btn-primary" onclick="finishSession()">🏁 Terminer la séance</button>
+        <a href="progression.html?session=${SESSION}" class="btn btn-ghost">📈 Progression</a>
+        <a href="profil.html" class="btn btn-ghost">👤 Profil</a>
+      </div>`;
+  }
+
+  /* ── 5. Cards exercice ── */
   function renderExerciseCard(ex, idx) {
     const nameHtml = ex.nameDetail
       ? `${ex.name} <span class="ex-name-detail">${ex.nameDetail}</span>`
@@ -398,7 +481,7 @@
       </div>`).join('');
 
     return `
-      <div class="ex-card" data-ex-idx="${idx}">
+      <div class="ex-card" data-ex-idx="${idx}" data-ex-name="${ex.name}">
         <div class="ex-num">${String(idx + 1).padStart(2, '0')}</div>
         <div class="ex-body">
           <div class="ex-title-row">
@@ -408,7 +491,6 @@
           <div class="ex-muscles">${ex.muscles}</div>
           <div class="sets-row">${setsChips}</div>
           ${ex.note ? `<div class="ex-note">${ex.note}</div>` : ''}
-          <!-- card-log-zone injecté par T.initCardLog() -->
         </div>
         ${ex.restSec ? `
         <div class="rest-block" onclick="T.startTimer(${ex.restSec}, '${ex.name.replace(/'/g, "\\'")}')" title="Clic pour lancer le timer">
@@ -420,7 +502,7 @@
       </div>`;
   }
 
-  /* ── 5. Tips panel ── */
+  /* ── 6. Tips ── */
   function renderTips() {
     if (!workout.tips || !workout.tips.length) return '';
     const items = workout.tips.map(t => `
@@ -435,7 +517,7 @@
       </div>`;
   }
 
-  /* ── 6. Footer ── */
+  /* ── 7. Footer ── */
   function renderFooter() {
     const f = workout.footer || {};
     const chips = [f.sets, f.duration, f.note].filter(Boolean).map(c =>
@@ -448,37 +530,68 @@
       </div>`;
   }
 
-  /* ── 7. Rendu principal ── */
+  /* ── 8. Rendu principal ── */
   function render() {
     const cardsHtml = exercises.map((ex, i) => renderExerciseCard(ex, i)).join('');
 
     document.getElementById('app-root').innerHTML =
       renderHeader() +
+      renderLiveBanner() +
       renderActionBar() +
       `<div class="exercises-grid" id="exercises-grid">${cardsHtml}</div>` +
       renderTips() +
       renderFooter();
 
-    // Injecte les card logs après rendu DOM
+    // Injecte les card logs
     document.querySelectorAll('.ex-card').forEach((card, i) => {
       T.initCardLog(card, SESSION, exercises[i].name, exercises[i].sets);
     });
+
+    // Init bannière live
+    T.initLiveBanner(SESSION, exerciseNames);
+
+    // Marque les cards déjà sauvegardées aujourd'hui
+    refreshDoneCards();
   }
 
-  render();
+  /* ── 9. Marque les cards "done" si sauvegardées aujourd'hui ── */
+  function refreshDoneCards() {
+    document.querySelectorAll('.ex-card').forEach(card => {
+      const name = card.dataset.exName;
+      if (!name) return;
+      card.classList.toggle('ex-done', T.isExerciseFullyValidated(SESSION, name));
+    });
 
-  /* ── 8. Refresh stats (PR) après sauvegarde ── */
-  document.addEventListener('exercise-saved', () => {
+    // Mise à jour des stats header
     const prs = exerciseNames.filter(name => {
       const h = T.getHistory(SESSION, name);
       if (h.length < 2) return false;
-      const curr = Math.max(...(h[0].sets || []).map(s => parseFloat(s.kg) || 0));
-      const prev = Math.max(...(h[1].sets || []).map(s => parseFloat(s.kg) || 0));
+      const curr = Math.max(0, ...((h[0].sets || []).map(s => parseFloat(s.kg) || 0)));
+      const prev = Math.max(0, ...((h[1].sets || []).map(s => parseFloat(s.kg) || 0)));
       return curr > prev;
     });
     const el = document.getElementById('stat-pr');
     if (el) el.textContent = prs.length || '—';
+  }
+
+  /* ── 10. Start Workout (avec passage session + exercices) ── */
+  window.startSession = function () {
+    T.startWorkout(SESSION, exerciseNames);
+  };
+
+  window.finishSession = function () {
+    T.finishSession();
+  };
+
+  /* ── 11. Refresh après sauvegarde ── */
+  document.addEventListener('exercise-saved', () => {
+    refreshDoneCards();
   });
+  document.addEventListener('exercise-validation-changed', () => {
+    refreshDoneCards();
+  });
+
+  render();
 
 })();
 </script>

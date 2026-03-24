@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvelle séance</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0d; --card:#1a1a1a; --border:#2a2a2a; --accent:#e8390e; --text:#f0f0f0; --muted:#888; --blue:#5a67ff; --green:#22c55e; --red:#ef4444; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; padding:32px 18px 60px; }
+  .page { max-width:1020px; margin:0 auto; }
+  .nav { color:var(--muted); text-decoration:none; font-size:11px; text-transform:uppercase; letter-spacing:1px; display:inline-block; margin-bottom:14px; }
+  .header { border-bottom:2px solid var(--accent); padding-bottom:14px; margin-bottom:16px; }
+  .label { color:var(--accent); font-size:11px; letter-spacing:4px; text-transform:uppercase; font-weight:700; }
+  .title { font-family:'Bebas Neue',sans-serif; font-size:58px; letter-spacing:2px; line-height:1; }
+  .subtitle { color:var(--muted); font-size:13px; }
+  .grid { display:grid; grid-template-columns: 1.1fr .9fr; gap:12px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:14px; }
+  .card h3 { color:var(--accent); font-size:10px; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .in, .sel { background:#111; color:var(--text); border:1px solid var(--border); border-radius:5px; padding:8px 10px; font-size:13px; }
+  .in:focus, .sel:focus { outline:none; border-color:var(--accent); }
+  .btn { border:none; border-radius:5px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  .lib-list { max-height:420px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
+  .lib-item { background:#141414; border:1px solid var(--border); border-radius:5px; padding:8px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .lib-meta { color:var(--muted); font-size:11px; }
+  .chosen-item { border:1px solid var(--border); border-left:3px solid var(--blue); background:#141414; border-radius:5px; padding:8px; margin-bottom:8px; }
+  .chosen-head { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:6px; }
+  .tiny { color:var(--muted); font-size:11px; }
+  .msg { font-size:12px; margin-top:8px; min-height:16px; }
+  .ok { color:var(--green); } .err { color:var(--red); }
+  @media (max-width: 900px){ .grid{grid-template-columns:1fr;} .title{font-size:46px;} }
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="index.html" class="nav">← Retour accueil</a>
+  <div class="header">
+    <div class="label">Builder</div>
+    <div class="title">NOUVELLE SEANCE</div>
+    <div class="subtitle">Crée une séance complète avec bibliothèque avancée d'exercices</div>
+  </div>
+
+  <div class="row">
+    <input class="in" id="session-name" placeholder="Nom de la séance (ex: Upper Power)" style="min-width:260px;flex:1;">
+    <button class="btn btn-primary" id="save-session-btn">💾 Sauvegarder la séance</button>
+    <div id="save-msg" class="msg"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Bibliothèque d'exercices</h3>
+      <div class="row">
+        <input class="in" id="search" placeholder="Rechercher un exercice..." style="flex:1;min-width:160px;">
+        <select class="sel" id="filter-muscle"><option value="">Tous groupes</option></select>
+        <select class="sel" id="filter-equip"><option value="">Tout matériel</option></select>
+      </div>
+      <div class="lib-list" id="library"></div>
+    </div>
+
+    <div class="card">
+      <h3>Séance en construction</h3>
+      <div id="chosen-list"></div>
+      <div class="tiny">Tu peux modifier sets, repos et ordre avant sauvegarde.</div>
+    </div>
+  </div>
+</div>
+
+<script src="training.js"></script>
+<script src="exercises-library.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cloud.js"></script>
+<script>
+  if (window.C) C.requireAuthOrRedirect();
+  const chosen = [];
+  const $ = (id) => document.getElementById(id);
+  function slugify(v){ return (v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+  function unique(arr){ return [...new Set(arr)]; }
+  function initFilters() {
+    unique(EXERCISE_LIBRARY.map(e => e.muscle)).forEach(m => $('filter-muscle').innerHTML += `<option value="${m}">${m}</option>`);
+    unique(EXERCISE_LIBRARY.map(e => e.equipment)).forEach(m => $('filter-equip').innerHTML += `<option value="${m}">${m}</option>`);
+  }
+  function filteredLib() {
+    const q = $('search').value.trim().toLowerCase();
+    const m = $('filter-muscle').value;
+    const e = $('filter-equip').value;
+    return EXERCISE_LIBRARY.filter(x => {
+      if (m && x.muscle !== m) return false;
+      if (e && x.equipment !== e) return false;
+      if (!q) return true;
+      return `${x.name} ${x.muscle} ${x.variant} ${x.equipment}`.toLowerCase().includes(q);
+    });
+  }
+  function renderLibrary() {
+    const list = filteredLib();
+    $('library').innerHTML = list.map((x, idx) => `
+      <div class="lib-item">
+        <div>
+          <div>${x.name}</div>
+          <div class="lib-meta">${x.muscle} · ${x.equipment} · ${x.variant}</div>
+        </div>
+        <button class="btn btn-ghost" onclick="addExercise(${idx})">+ Ajouter</button>
+      </div>`).join('');
+    window._filtered = list;
+  }
+  function renderChosen() {
+    $('chosen-list').innerHTML = chosen.map((x, i) => `
+      <div class="chosen-item">
+        <div class="chosen-head">
+          <strong>${i + 1}. ${x.name}</strong>
+          <div>
+            <button class="btn btn-ghost" onclick="moveUp(${i})">↑</button>
+            <button class="btn btn-ghost" onclick="moveDown(${i})">↓</button>
+            <button class="btn btn-ghost" onclick="removeEx(${i})">✕</button>
+          </div>
+        </div>
+        <div class="row">
+          <input class="in" value="${x.sets}" type="number" min="1" onchange="setSets(${i}, this.value)" style="width:90px;">
+          <span class="tiny" style="align-self:center;">sets</span>
+          <input class="in" value="${x.restSec}" type="number" min="15" step="15" onchange="setRest(${i}, this.value)" style="width:110px;">
+          <span class="tiny" style="align-self:center;">sec repos</span>
+        </div>
+      </div>
+    `).join('') || `<div class="tiny">Aucun exercice ajouté.</div>`;
+  }
+  window.addExercise = function(i){
+    const x = window._filtered[i];
+    if (!x) return;
+    chosen.push({ ...x, sets: 3, restSec: x.defaultRestSec || 90 });
+    renderChosen();
+  };
+  window.removeEx = function(i){ chosen.splice(i,1); renderChosen(); };
+  window.moveUp = function(i){ if (i<=0) return; [chosen[i-1],chosen[i]]=[chosen[i],chosen[i-1]]; renderChosen(); };
+  window.moveDown = function(i){ if (i>=chosen.length-1) return; [chosen[i+1],chosen[i]]=[chosen[i],chosen[i+1]]; renderChosen(); };
+  window.setSets = function(i,v){ chosen[i].sets = Math.max(1, parseInt(v,10)||1); };
+  window.setRest = function(i,v){ chosen[i].restSec = Math.max(15, parseInt(v,10)||90); };
+
+  function toWorkout(name) {
+    const slug = `custom-${slugify(name)}-${Date.now().toString(36).slice(-4)}`;
+    return {
+      slug,
+      name,
+      displayName: name,
+      icon: '🧩',
+      tag: 'Personnalisee',
+      title: name.toUpperCase(),
+      subtitle: 'Seance personnalisee',
+      footer: { sets: `${chosen.reduce((a,b)=>a+b.sets,0)} series`, duration: '~50 min', note: 'Plan custom' },
+      tips: [],
+      exercises: chosen.map((x, idx) => ({
+        name: x.name,
+        nameDetail: '',
+        badge: `Custom #${idx + 1}`,
+        muscles: x.muscle,
+        note: `${x.variant} · ${x.equipment}`,
+        restSec: x.restSec,
+        restLabel: `${Math.floor(x.restSec / 60)}'${String(x.restSec % 60).padStart(2,'0')}`,
+        sets: Array.from({ length: x.sets }, (_, i) => ({
+          label: `S${i+1}`,
+          charge: 'Auto',
+          reps: '8-12 reps',
+          rir: 'RIR 1-2',
+          drop: false
+        }))
+      }))
+    };
+  }
+  $('save-session-btn').addEventListener('click', () => {
+    const name = $('session-name').value.trim();
+    const msg = $('save-msg');
+    msg.className = 'msg';
+    if (!name) { msg.classList.add('err'); msg.textContent = 'Donne un nom a la seance.'; return; }
+    if (!chosen.length) { msg.classList.add('err'); msg.textContent = 'Ajoute au moins un exercice.'; return; }
+    const w = toWorkout(name);
+    T.addCustomWorkout(w);
+    msg.classList.add('ok');
+    msg.textContent = 'Seance sauvegardee. Redirection...';
+    setTimeout(() => { location.href = `seance.html?slug=${encodeURIComponent(w.slug)}`; }, 600);
+  });
+
+  ['search','filter-muscle','filter-equip'].forEach(id => $(id).addEventListener('input', renderLibrary));
+  initFilters();
+  renderLibrary();
+  renderChosen();
+</script>
+</body>
+</html>

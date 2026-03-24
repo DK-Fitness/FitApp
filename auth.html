@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0d; --card:#1a1a1a; --border:#2a2a2a; --accent:#e8390e; --text:#f0f0f0; --muted:#888; --red:#ef4444; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .card { width:100%; max-width:480px; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:24px; }
+  .label { color:var(--accent); font-size:11px; letter-spacing:4px; text-transform:uppercase; font-weight:700; }
+  .title { font-family:'Bebas Neue',sans-serif; font-size:56px; line-height:1; letter-spacing:2px; margin:4px 0 8px; }
+  .sub { color:var(--muted); font-size:13px; margin-bottom:16px; }
+  .row { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .in { background:#111; color:var(--text); border:1px solid var(--border); border-radius:5px; padding:10px 12px; }
+  .in:focus { outline:none; border-color:var(--accent); }
+  .btn { width:100%; border:none; border-radius:5px; padding:10px 12px; cursor:pointer; font-weight:700; margin-top:8px; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text); }
+  .muted { color:var(--muted); font-size:12px; margin-top:10px; }
+  .err { color:var(--red); font-size:12px; margin-top:10px; min-height:16px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="label">FitApp Cloud</div>
+    <div class="title">CONNEXION</div>
+    <div class="sub">Google OAuth2 ou email/mot de passe</div>
+    <button class="btn btn-primary" id="google-btn">Continuer avec Google</button>
+    <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+    <div class="row">
+      <input class="in" id="email" type="email" placeholder="email@domaine.com">
+      <input class="in" id="password" type="password" placeholder="Mot de passe">
+    </div>
+    <button class="btn btn-primary" id="login-btn">Se connecter</button>
+    <button class="btn btn-ghost" id="signup-btn">Créer un compte</button>
+    <div class="muted">Les données sont synchronisées automatiquement entre appareils.</div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="cloud.js"></script>
+  <script>
+    const errEl = document.getElementById('err');
+    const emailEl = document.getElementById('email');
+    const passEl = document.getElementById('password');
+    const showErr = (e) => errEl.textContent = e?.message || 'Erreur';
+
+    C.requireAuthOrRedirect();
+    document.getElementById('google-btn').addEventListener('click', async () => {
+      errEl.textContent = '';
+      try { await C.signInGoogle(); } catch (e) { showErr(e); }
+    });
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      errEl.textContent = '';
+      try { await C.signInEmail(emailEl.value.trim(), passEl.value); } catch (e) { showErr(e); }
+    });
+    document.getElementById('signup-btn').addEventListener('click', async () => {
+      errEl.textContent = '';
+      try { await C.signUpEmail(emailEl.value.trim(), passEl.value); } catch (e) { showErr(e); }
+    });
+  </script>
+</body>
+</html>

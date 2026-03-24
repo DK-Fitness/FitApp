@@ -11,7 +11,7 @@
     --border: #2a2a2a; --border-hover: #3a3a3a;
     --accent: #e8390e; --accent2: #ff6b35;
     --text: #f0f0f0; --muted: #888; --soft: #555;
-    --green: #22c55e; --red: #ef4444;
+    --green: #22c55e; --red: #ef4444; --gold: #f4b942;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 40px 20px 60px; }
@@ -57,45 +57,107 @@
   .card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
   .card-tag { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; background: rgba(232,57,14,.1); color: var(--accent); border: 1px solid rgba(232,57,14,.25); }
   .card-last { font-size: 10px; color: var(--soft); }
-  .card-pr { font-size: 10px; color: gold; font-weight: 700; }
+  .card-pr { font-size: 10px; color: var(--gold); font-weight: 700; }
 
   /* ── PROGRESSION ── */
   #tab-prog { display: none; }
-  .prog-controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+
+  .prog-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
   .prog-selects { display: flex; gap: 10px; flex-wrap: wrap; }
   .prog-select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 5px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; }
   .prog-select:focus { outline: none; border-color: var(--accent); }
 
   /* Period filter */
   .period-filter { display: flex; gap: 4px; }
-  .period-btn { padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; transition: all .15s; }
+  .period-btn { padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; transition: all .15s; }
   .period-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
   .period-btn:hover:not(.active) { border-color: #444; color: var(--text); }
 
-  /* Volume card */
-  .vol-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
-  .vol-block { display: flex; flex-direction: column; gap: 3px; }
-  .vol-val { font-family: 'Bebas Neue', sans-serif; font-size: 30px; line-height: 1; }
-  .vol-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .vol-delta { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
-  .vol-delta.up   { color: var(--green); background: rgba(34,197,94,.1); }
-  .vol-delta.down { color: var(--red);   background: rgba(239,68,68,.1); }
-  .vol-delta.eq   { color: var(--muted); }
+  /* ── DASHBOARD VOLUME (refait) ── */
+  .vol-dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .vol-metric {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .vol-metric.highlight {
+    border-left: 3px solid var(--accent);
+  }
+  .vol-metric-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; line-height: 1; color: var(--text);
+  }
+  .vol-metric-label {
+    font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+  }
+  .vol-metric-delta {
+    font-size: 11px; font-weight: 700; margin-top: 2px;
+  }
+  .delta-up   { color: var(--green); }
+  .delta-down { color: var(--red); }
+  .delta-eq   { color: var(--muted); }
 
+  /* Indicateur global */
+  .global-indicator {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap;
+  }
+  .gi-icon { font-size: 22px; }
+  .gi-text { font-size: 14px; font-weight: 700; }
+  .gi-sub  { font-size: 12px; color: var(--muted); }
+  .gi-badge {
+    margin-left: auto;
+    font-size: 11px; font-weight: 700; padding: 5px 14px;
+    border-radius: 4px;
+  }
+  .gi-badge.up   { background: rgba(34,197,94,.12);  border: 1px solid rgba(34,197,94,.3);  color: var(--green); }
+  .gi-badge.down { background: rgba(239,68,68,.12);  border: 1px solid rgba(239,68,68,.3);  color: var(--red); }
+  .gi-badge.pr   { background: rgba(244,185,66,.12); border: 1px solid rgba(244,185,66,.3); color: var(--gold); }
+  .gi-badge.eq   { background: rgba(255,255,255,.04); border: 1px solid var(--border);       color: var(--muted); }
+
+  /* ── PROG CARDS ── */
   .prog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 28px; }
   .prog-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 18px 20px; }
-  .prog-card-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-  .prog-card-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+  .prog-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+  .prog-card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .prog-card-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+  .prog-card-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; flex-shrink: 0; }
+  .prog-badge-pr   { background: rgba(244,185,66,.12); color: var(--gold); border: 1px solid rgba(244,185,66,.25); }
+  .prog-badge-up   { background: rgba(34,197,94,.12);  color: var(--green); border: 1px solid rgba(34,197,94,.25); }
+  .prog-badge-down { background: rgba(239,68,68,.12);  color: var(--red); border: 1px solid rgba(239,68,68,.25); }
+  .prog-badge-eq   { background: rgba(255,255,255,.04); color: var(--muted); border: 1px solid var(--border); }
+
   .prog-chart { height: 60px; position: relative; margin-bottom: 12px; }
   .prog-chart svg { width: 100% !important; height: 60px !important; }
-  .prog-stats { display: flex; gap: 14px; }
+
+  .prog-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
   .prog-stat { display: flex; flex-direction: column; gap: 2px; }
-  .prog-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
+  .prog-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; }
   .prog-stat-val.up      { color: var(--green); }
   .prog-stat-val.down    { color: var(--red); }
+  .prog-stat-val.pr      { color: var(--gold); }
   .prog-stat-val.neutral { color: var(--text); }
-  .prog-stat-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .prog-suggestion { font-size: 11px; color: var(--accent2); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .prog-stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+
+  .prog-suggestion {
+    font-size: 11px; color: var(--accent2);
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 6px; align-items: flex-start;
+  }
+
   .no-data { font-size: 13px; color: var(--soft); font-style: italic; text-align: center; padding: 40px 20px; }
 
   /* ── HISTORY TABLE ── */
@@ -103,11 +165,11 @@
   .panel-title { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
   .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .hist-table th { text-align: left; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 8px 8px 0; font-weight: 600; }
-  .hist-table td { padding: 6px 8px 6px 0; border-top: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  .hist-table td { padding: 7px 8px 7px 0; border-top: 1px solid var(--border); color: var(--text); vertical-align: middle; }
   .hist-table tr:first-child td { border-top: none; }
-  .badge-up { color: var(--green); font-weight: 700; font-size: 11px; }
-  .badge-down { color: var(--red); font-weight: 700; font-size: 11px; }
-  .badge-pr { color: gold; font-weight: 700; font-size: 11px; }
+  .badge-up   { color: var(--green); font-weight: 700; font-size: 11px; }
+  .badge-down { color: var(--red);   font-weight: 700; font-size: 11px; }
+  .badge-pr   { color: var(--gold);  font-weight: 700; font-size: 11px; }
   .hist-del-btn { background: none; border: none; color: var(--soft); cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 3px; transition: color .15s; }
   .hist-del-btn:hover { color: var(--red); }
 
@@ -150,6 +212,7 @@
     .prog-grid { grid-template-columns: 1fr; }
     .data-grid { grid-template-columns: 1fr; }
     .prog-controls { flex-direction: column; align-items: flex-start; }
+    .vol-dashboard { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -180,13 +243,18 @@
 
   <!-- TABS -->
   <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('hub')">🏠 Hub</button>
-    <button class="tab-btn" onclick="switchTab('prog')">📈 Progression</button>
-    <button class="tab-btn" onclick="switchTab('data')">💾 Données</button>
+    <button class="tab-btn active" data-tab="hub" onclick="switchTab('hub')">🏠 Hub</button>
+    <button class="tab-btn" type="button" onclick="window.location.href='progression.html'">📈 Progression</button>
+    <button class="tab-btn" type="button" onclick="window.location.href='profil.html'">👤 Profil</button>
+    <button class="tab-btn" type="button" onclick="logout()">🔐 Déconnexion</button>
+    <button class="tab-btn" data-tab="data" onclick="switchTab('data')">💾 Données</button>
   </div>
 
   <!-- ── TAB HUB ── -->
   <div id="tab-hub">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <a href="create-session.html" class="btn btn-secondary">➕ Créer une séance</a>
+    </div>
     <div class="section-head">
       <span class="section-label">Séances disponibles</span>
       <div class="section-line"></div>
@@ -208,21 +276,40 @@
       </div>
     </div>
 
-    <!-- Volume total -->
-    <div class="vol-card" id="vol-card" style="display:none">
-      <div class="vol-block">
-        <span class="vol-label">Volume séance actuelle</span>
-        <span class="vol-val" id="vol-last">—</span>
+    <!-- Indicateur global -->
+    <div class="global-indicator" id="global-indicator" style="display:none">
+      <span class="gi-icon" id="gi-icon"></span>
+      <div>
+        <div class="gi-text" id="gi-text"></div>
+        <div class="gi-sub"  id="gi-sub"></div>
       </div>
-      <div class="vol-block">
-        <span class="vol-label">Séance précédente</span>
-        <span class="vol-val" id="vol-prev">—</span>
+      <span class="gi-badge" id="gi-badge"></span>
+    </div>
+
+    <!-- Dashboard volume -->
+    <div class="vol-dashboard" id="vol-dashboard" style="display:none">
+      <div class="vol-metric highlight">
+        <span class="vol-metric-val" id="vol-last">—</span>
+        <span class="vol-metric-label">Volume séance</span>
+        <span class="vol-metric-delta" id="vol-delta"></span>
       </div>
-      <div id="vol-delta"></div>
+      <div class="vol-metric">
+        <span class="vol-metric-val" id="vol-prev">—</span>
+        <span class="vol-metric-label">Séance préc.</span>
+      </div>
+      <div class="vol-metric">
+        <span class="vol-metric-val" id="vol-best-session">—</span>
+        <span class="vol-metric-label">Meilleur vol.</span>
+      </div>
+      <div class="vol-metric">
+        <span class="vol-metric-val" id="vol-prs">—</span>
+        <span class="vol-metric-label">PR actifs</span>
+        <span class="vol-metric-delta" style="color:var(--gold);font-size:10px;" id="vol-pr-label"></span>
+      </div>
     </div>
 
     <div class="section-head">
-      <span class="section-label">Vue d'ensemble</span>
+      <span class="section-label">Par exercice</span>
       <div class="section-line"></div>
     </div>
     <div class="prog-grid" id="prog-grid"></div>
@@ -305,20 +392,29 @@
 <script src="sessions.js"></script>
 <script src="workouts.js"></script>
 <script src="training.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cloud.js"></script>
 <script>
-  /* ── TABS ──────────────────────────────────────────────── */
+  if (window.C) C.requireAuthOrRedirect();
+  /* ═══════════════════════════════════════════════════════════════
+     TABS
+  ═══════════════════════════════════════════════════════════════ */
   function switchTab(name) {
     ['hub','prog','data'].forEach(t => {
       document.getElementById(`tab-${t}`).style.display = t === name ? '' : 'none';
     });
-    document.querySelectorAll('.tab-btn').forEach((b, i) => {
-      b.classList.toggle('active', ['hub','prog','data'][i] === name);
+    document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.tab === name);
     });
-    if (name === 'prog')  renderProgression();
-    if (name === 'data')  renderDataTab();
+    if (name === 'data') renderDataTab();
   }
 
-  /* ── PERIOD FILTER ─────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════
+     PERIOD FILTER
+  ═══════════════════════════════════════════════════════════════ */
   let _period = 0;
   function setPeriod(days) {
     _period = days;
@@ -335,7 +431,66 @@
     return all.filter(h => new Date(h.date).getTime() >= cutoff);
   }
 
-  /* ── HUB ───────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════
+     VOLUME PAR SÉANCE — calcul basé sur des tranches temporelles groupées
+     Regroupe les entrées par "jour de séance" (même date calendaire)
+     pour donner un volume cohérent par séance réelle, indépendamment
+     de l'ordre d'entrée de chaque exercice dans le localStorage.
+  ═══════════════════════════════════════════════════════════════ */
+
+  /**
+   * Retourne la liste de toutes les séances réelles pour un slug,
+   * triées de la plus récente à la plus ancienne.
+   * Chaque "séance" = { dateKey, date, volTotal, exercises: {exName: entry} }
+   *
+   * On groupe par date calendaire locale (YYYY-MM-DD).
+   * Si un même exercice a plusieurs entrées le même jour, on prend la plus récente.
+   */
+  function _getGroupedSessions(slug, exercises) {
+    // Collecte toutes les entrées avec leur exo et leur date-clé
+    const byDay = {}; // dateKey → { date, exercises: {exName: entry} }
+
+    exercises.forEach(ex => {
+      T.getHistory(slug, ex).forEach(entry => {
+        const d = new Date(entry.date);
+        const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (!byDay[dateKey]) byDay[dateKey] = { date: d, dateKey, exercises: {} };
+        // Garde la plus récente du jour si plusieurs pour le même exo
+        if (!byDay[dateKey].exercises[ex] || new Date(entry.date) > new Date(byDay[dateKey].exercises[ex].date)) {
+          byDay[dateKey].exercises[ex] = entry;
+        }
+      });
+    });
+
+    // Calcule le volume total de chaque séance groupée
+    const sessions = Object.values(byDay).map(s => {
+      let volTotal = 0;
+      Object.values(s.exercises).forEach(entry => {
+        (entry.sets || []).forEach(set => {
+          volTotal += (parseFloat(set.kg) || 0) * (parseInt(set.reps) || 0);
+        });
+      });
+      return { ...s, volTotal };
+    });
+
+    // Tri du plus récent au plus ancien
+    sessions.sort((a, b) => b.date - a.date);
+    return sessions;
+  }
+
+  /**
+   * Retourne les entrées d'un exercice filtrées par période,
+   * avec les entrées les plus récentes en premier.
+   */
+  function _filteredHistoryEx(slug, ex) {
+    const raw = _filteredHistory(slug, ex);
+    // raw est déjà trié du plus récent au plus ancien (T.getHistory)
+    return raw;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     HUB
+  ═══════════════════════════════════════════════════════════════ */
   function buildCard(s) {
     const url        = `seance.html?slug=${s.slug}`;
     const allHistory = s.exercises.flatMap(ex => T.getHistory(s.slug, ex));
@@ -344,25 +499,25 @@
       const last = allHistory.sort((a,b) => new Date(b.date)-new Date(a.date))[0];
       lastStr = new Date(last.date).toLocaleDateString('fr-FR');
     }
-    // PR : compare le meilleur kg du dernier log vs celui d'avant (format sets)
     const prCount = s.exercises.filter(ex => {
       const h = T.getHistory(s.slug, ex);
       if (h.length < 2) return false;
-      const best = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
+      const best = entry => Math.max(0, ...((entry.sets || []).map(set => parseFloat(set.kg) || 0)));
       return best(h[0]) > best(h[1]);
     }).length;
 
     const a = document.createElement('a');
     a.className = 'session-card';
     a.href      = url;
+    const isCustom = String(s.slug).startsWith('custom-');
     a.innerHTML = `
       <div class="card-top">
         <div class="card-icon">${s.icon}</div>
         <span class="card-arrow">→</span>
       </div>
       <div class="card-body">
-        <span class="card-badge">Groupe musculaire</span>
-        <div class="card-title">${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</div>
+        <span class="card-badge">${isCustom ? 'Séance personnalisée' : 'Groupe musculaire'}</span>
+        <div class="card-title">${s.name || (s.slug.charAt(0).toUpperCase() + s.slug.slice(1))}</div>
         <div class="card-filename">${url}</div>
       </div>
       <div class="card-footer">
@@ -375,101 +530,324 @@
   function initHub() {
     const grid = document.getElementById('sessions-grid');
     grid.innerHTML = '';
-    if (!SESSIONS.length) {
+    const allSessions = T.getAllSessions(SESSIONS, WORKOUTS);
+    if (!allSessions.length) {
       grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Aucune séance configurée.</div><div class="empty-hint">Ajoute une entrée dans sessions.js</div></div>`;
       return;
     }
-    SESSIONS.forEach(s => grid.appendChild(buildCard(s)));
-    document.getElementById('stat-count').textContent = SESSIONS.length;
-    const totalLogs = SESSIONS.reduce((acc, s) =>
+    allSessions.forEach(s => grid.appendChild(buildCard(s)));
+    document.getElementById('stat-count').textContent = allSessions.length;
+    const totalLogs = allSessions.reduce((acc, s) =>
       acc + s.exercises.reduce((a, ex) => a + T.getHistory(s.slug, ex).length, 0), 0);
     document.getElementById('stat-sessions-done').textContent = totalLogs || '—';
   }
 
-  /* ── PROGRESSION ───────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════
+     REFRESH CENTRALISÉ
+     Appelé après toute sauvegarde d'exercice (event exercise-saved)
+     et après fin de séance.
+  ═══════════════════════════════════════════════════════════════ */
+  document.addEventListener('exercise-saved', () => {
+    initHub();
+    // Si l'onglet Progression est visible, le rafraîchir
+    const progTab = document.getElementById('tab-prog');
+    if (progTab && progTab.style.display !== 'none') {
+      renderProgression();
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     PROGRESSION — rendu principal
+  ═══════════════════════════════════════════════════════════════ */
   function renderProgression() {
     const sel     = document.getElementById('prog-session-select');
     const slug    = sel.value;
-    const session = SESSIONS.find(s => s.slug === slug);
+    if (!slug) return;
+
+    const session = T.getAllSessions(SESSIONS, WORKOUTS).find(s => s.slug === slug);
     if (!session) return;
 
-    /* Exercise select */
-    const exSel  = document.getElementById('prog-ex-select');
-    const curEx  = exSel.value;
+    /* ── Sync du sélecteur d'exercice ── */
+    const exSel = document.getElementById('prog-ex-select');
+    const curEx = exSel.value;
+    // Reconstruire les options en gardant la sélection si toujours valide
     exSel.innerHTML = session.exercises.map(ex =>
-      `<option value="${ex}" ${ex === curEx ? 'selected' : ''}>${ex}</option>`).join('');
+      `<option value="${ex}" ${ex === curEx ? 'selected' : ''}>${ex}</option>`
+    ).join('');
+    // Si aucune sélection valide, prendre le premier exercice avec données, sinon le premier
+    if (!exSel.value || !session.exercises.includes(exSel.value)) {
+      const firstWithData = session.exercises.find(ex => T.getHistory(slug, ex).length > 0);
+      exSel.value = firstWithData || session.exercises[0] || '';
+    }
     exSel.onchange = renderHistoryTable;
 
-    /* Volume total */
-    const volLast = T.getSessionVolume(slug, session.exercises, 0);
-    const volPrev = T.getSessionVolume(slug, session.exercises, 1);
-    const volCard = document.getElementById('vol-card');
-    if (volLast > 0 || volPrev > 0) {
-      volCard.style.display = '';
-      document.getElementById('vol-last').textContent = volLast ? `${volLast.toLocaleString('fr-FR')} kg` : '—';
-      document.getElementById('vol-prev').textContent = volPrev ? `${volPrev.toLocaleString('fr-FR')} kg` : '—';
-      const deltaEl = document.getElementById('vol-delta');
-      if (volLast > 0 && volPrev > 0) {
-        const pct = Math.round(((volLast - volPrev) / volPrev) * 100);
-        const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'eq';
-        deltaEl.innerHTML = `<span class="vol-delta ${cls}">${pct > 0 ? '+' : ''}${pct}%</span>`;
-      } else { deltaEl.innerHTML = ''; }
-    } else { volCard.style.display = 'none'; }
+    /* ── Séances groupées ── */
+    const groupedSessions = _getGroupedSessions(slug, session.exercises);
 
-    /* Cards par exercice */
-    const grid = document.getElementById('prog-grid');
-    grid.innerHTML = '';
+    // Vérifie s'il y a des données (au moins un exercice logué)
+    const hasAnyData = session.exercises.some(ex => T.getHistory(slug, ex).length > 0);
 
-    session.exercises.forEach(ex => {
-      const history = _filteredHistory(slug, ex).slice(0, 10).reverse();
-      if (!history.length) return;
-
-      // Extrait le best kg de chaque entrée (format sets)
-      const _bestKgOfEntry = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
-
-      const last    = history[history.length - 1];
-      const prev    = history.length >= 2 ? history[history.length - 2] : null;
-      const lastKg  = _bestKgOfEntry(last);
-      const prevKg  = prev ? _bestKgOfEntry(prev) : 0;
-      const dKg     = prev ? lastKg - prevKg : 0;
-      const maxKg   = T.getBestKg(slug, ex);
-      const sugg    = T.getNextSuggestion(slug, ex);
-      const entryCount = T.getHistory(slug, ex).length;
-
-      const kgs       = history.map(_bestKgOfEntry).filter(v => v > 0);
-      const sparkline = kgs.length >= 2 ? buildSparkline(kgs) : '';
-
-      const card = document.createElement('div');
-      card.className = 'prog-card';
-      card.innerHTML = `
-        <div class="prog-card-title">${ex}</div>
-        <div class="prog-card-sub">${entryCount} entrée(s)${_period ? ` — ${_period} derniers jours` : ''}</div>
-        ${sparkline ? `<div class="prog-chart">${sparkline}</div>` : ''}
-        <div class="prog-stats">
-          <div class="prog-stat">
-            <span class="prog-stat-val neutral">${lastKg || '—'} kg</span>
-            <span class="prog-stat-label">Dernière charge</span>
-          </div>
-          <div class="prog-stat">
-            <span class="prog-stat-val ${dKg > 0 ? 'up' : dKg < 0 ? 'down' : 'neutral'}">${dKg > 0 ? '+' : ''}${dKg ? dKg.toFixed(1) : '='} kg</span>
-            <span class="prog-stat-label">Évolution</span>
-          </div>
-          <div class="prog-stat">
-            <span class="prog-stat-val" style="color:gold">${maxKg !== null ? maxKg + ' kg' : '—'}</span>
-            <span class="prog-stat-label">Record</span>
-          </div>
-        </div>
-        ${sugg ? `<div class="prog-suggestion">💡 ${sugg}</div>` : ''}`;
-      grid.appendChild(card);
-    });
-
-    if (!grid.children.length) {
-      grid.innerHTML = `<div class="no-data">Aucune donnée${_period ? ` sur les ${_period} derniers jours` : ''} pour cette séance.</div>`;
+    /* ── État vide intelligent ── */
+    if (!hasAnyData) {
+      _renderEmptyState(slug);
+      return;
     }
 
+    // Masque l'état vide si affiché
+    const emptyEl = document.getElementById('prog-empty-state');
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    /* ── Dashboard volume ── */
+    _renderVolumeDashboard(slug, session, groupedSessions);
+
+    /* ── Cards par exercice ── */
+    _renderExerciseCards(slug, session);
+
+    /* ── Historique détaillé ── */
     renderHistoryTable();
   }
 
+  /* ─── Dashboard volume ─────────────────────────────────── */
+  function _renderVolumeDashboard(slug, session, groupedSessions) {
+    const dashEl = document.getElementById('vol-dashboard');
+    const giEl   = document.getElementById('global-indicator');
+
+    const volLast = groupedSessions[0]?.volTotal || 0;
+    const volPrev = groupedSessions[1]?.volTotal || 0;
+
+    // Meilleur volume toutes séances confondues
+    const bestVol = groupedSessions.reduce((max, s) => Math.max(max, s.volTotal), 0);
+
+    // PRs actifs : exercices où la dernière entrée est un record all-time
+    const prs = session.exercises.filter(ex => {
+      const h = T.getHistory(slug, ex);
+      if (!h.length) return false;
+      const best = e => Math.max(0, ...((e.sets || []).map(s => parseFloat(s.kg) || 0)));
+      if (h.length === 1) return best(h[0]) > 0; // 1ère séance = 1er record
+      return best(h[0]) > best(h[1]);
+    });
+
+    // Afficher le dashboard dès qu'il y a au moins une séance
+    if (volLast > 0 || groupedSessions.length > 0) {
+      dashEl.style.display = '';
+      document.getElementById('vol-last').textContent         = volLast ? `${volLast.toLocaleString('fr-FR')} kg` : '—';
+      document.getElementById('vol-prev').textContent         = volPrev ? `${volPrev.toLocaleString('fr-FR')} kg` : '—';
+      document.getElementById('vol-best-session').textContent = bestVol ? `${bestVol.toLocaleString('fr-FR')} kg` : '—';
+      document.getElementById('vol-prs').textContent          = prs.length || '0';
+      document.getElementById('vol-pr-label').textContent     = prs.length ? prs.map(e => e.split(' ')[0]).join(', ') : '';
+
+      const deltaEl = document.getElementById('vol-delta');
+      if (volLast > 0 && volPrev > 0) {
+        const pct = Math.round(((volLast - volPrev) / volPrev) * 100);
+        deltaEl.className   = `vol-metric-delta ${pct > 0 ? 'delta-up' : pct < 0 ? 'delta-down' : 'delta-eq'}`;
+        deltaEl.textContent = `${pct > 0 ? '+' : ''}${pct}% vs préc.`;
+      } else if (groupedSessions.length === 1) {
+        deltaEl.className   = 'vol-metric-delta delta-up';
+        deltaEl.textContent = '1ère séance loggée';
+      } else {
+        deltaEl.textContent = '';
+      }
+
+      // Indicateur global
+      giEl.style.display = '';
+      const giIcon  = document.getElementById('gi-icon');
+      const giText  = document.getElementById('gi-text');
+      const giSub   = document.getElementById('gi-sub');
+      const giBadge = document.getElementById('gi-badge');
+
+      if (prs.length > 0) {
+        giIcon.textContent  = '🏆';
+        giText.textContent  = `${prs.length} record${prs.length > 1 ? 's' : ''} battu${prs.length > 1 ? 's' : ''}`;
+        giSub.textContent   = prs.join(', ');
+        giBadge.className   = 'gi-badge pr';
+        giBadge.textContent = 'PR !';
+      } else if (groupedSessions.length === 1) {
+        giIcon.textContent  = '🚀';
+        giText.textContent  = 'Première séance enregistrée !';
+        giSub.textContent   = `${session.exercises.filter(ex => T.getHistory(slug, ex).length > 0).length} exercice(s) logué(s)`;
+        giBadge.className   = 'gi-badge up';
+        giBadge.textContent = 'Début';
+      } else if (volLast > 0 && volPrev > 0) {
+        const pct = Math.round(((volLast - volPrev) / volPrev) * 100);
+        if (pct > 0) {
+          giIcon.textContent  = '↑';
+          giText.textContent  = 'Progression du volume';
+          giSub.textContent   = `+${pct}% vs séance précédente`;
+          giBadge.className   = 'gi-badge up';
+          giBadge.textContent = `+${pct}%`;
+        } else if (pct < 0) {
+          giIcon.textContent  = '↓';
+          giText.textContent  = 'Volume en baisse';
+          giSub.textContent   = `${pct}% vs séance précédente`;
+          giBadge.className   = 'gi-badge down';
+          giBadge.textContent = `${pct}%`;
+        } else {
+          giIcon.textContent  = '=';
+          giText.textContent  = 'Volume stable';
+          giSub.textContent   = 'Même volume que la séance précédente';
+          giBadge.className   = 'gi-badge eq';
+          giBadge.textContent = 'Stagnation';
+        }
+      } else {
+        giEl.style.display = 'none';
+      }
+    } else {
+      dashEl.style.display = 'none';
+      giEl.style.display   = 'none';
+    }
+  }
+
+  /* ─── Cards par exercice ───────────────────────────────── */
+  function _renderExerciseCards(slug, session) {
+    const grid = document.getElementById('prog-grid');
+    grid.innerHTML = '';
+    let cardCount = 0;
+
+    session.exercises.forEach(ex => {
+      const history = _filteredHistoryEx(slug, ex).slice(0, 20).reverse();
+      // Affiche une carte même si 1 seule entrée
+      if (!history.length) return;
+
+      const _bestKg   = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
+      const _totalVol = entry => (entry.sets || []).reduce((sum, s) =>
+        sum + (parseFloat(s.kg)||0) * (parseInt(s.reps)||0), 0);
+      const _avgRepsEntry = entry => {
+        const vals = (entry.sets || []).map(s => parseInt(s.reps) || 0).filter(v => v > 0);
+        return vals.length ? Math.round(vals.reduce((a,b) => a+b, 0) / vals.length) : 0;
+      };
+
+      const last    = history[history.length - 1];
+      const prev    = history.length >= 2 ? history[history.length - 2] : null;
+      const lastKg  = _bestKg(last);
+      const prevKg  = prev ? _bestKg(prev) : null;
+      const dKg     = prevKg !== null ? lastKg - prevKg : null;
+      const maxKg   = T.getBestKg(slug, ex);
+      const avgKg   = T.getAvgKg(slug, ex);
+      const sugg    = T.getNextSuggestion(slug, ex);
+      const entryCount = T.getHistory(slug, ex).length;
+
+      // Volume de la dernière séance
+      const lastVol = _totalVol(last);
+      const lastAvgReps = _avgRepsEntry(last);
+
+      const kgs       = history.map(_bestKg).filter(v => v > 0);
+      const sparkline = kgs.length >= 2 ? buildSparkline(kgs) : '';
+
+      // Badge de statut — aussi pour la 1ère séance
+      const isPR   = entryCount === 1 && lastKg > 0; // 1ère = toujours un PR
+      const isPRUp = dKg !== null && prevKg !== null && lastKg >= (maxKg || 0) && dKg > 0;
+      const isUp   = !isPR && !isPRUp && dKg !== null && dKg > 0;
+      const isDown = dKg !== null && dKg < 0;
+
+      let badgeHtml = '';
+      if (isPR || isPRUp) badgeHtml  = `<span class="prog-card-badge prog-badge-pr">🏆 PR</span>`;
+      else if (isUp)      badgeHtml  = `<span class="prog-card-badge prog-badge-up">↑ +${dKg} kg</span>`;
+      else if (isDown)    badgeHtml  = `<span class="prog-card-badge prog-badge-down">↓ ${dKg} kg</span>`;
+      else if (dKg === 0) badgeHtml  = `<span class="prog-card-badge prog-badge-eq">= Stable</span>`;
+
+      const card = document.createElement('div');
+      card.className = 'prog-card';
+      card.style.cursor = 'pointer';
+      card.title = 'Voir l\'historique détaillé';
+      card.innerHTML = `
+        <div class="prog-card-header">
+          <div>
+            <div class="prog-card-title">${ex}</div>
+            <div class="prog-card-sub">${entryCount} séance${entryCount > 1 ? 's' : ''}${_period ? ` — ${_period}j` : ''}</div>
+          </div>
+          ${badgeHtml}
+        </div>
+        ${sparkline ? `<div class="prog-chart">${sparkline}</div>` : ''}
+        <div class="prog-stats-grid">
+          <div class="prog-stat">
+            <span class="prog-stat-val ${(isPR || isPRUp) ? 'pr' : 'neutral'}">${lastKg || '—'} kg</span>
+            <span class="prog-stat-label">Dernière charge</span>
+          </div>
+          <div class="prog-stat">
+            <span class="prog-stat-val" style="color:var(--gold)">${maxKg !== null ? maxKg + ' kg' : '—'}</span>
+            <span class="prog-stat-label">Record</span>
+          </div>
+          <div class="prog-stat">
+            <span class="prog-stat-val neutral">${avgKg !== null ? avgKg + ' kg' : '—'}</span>
+            <span class="prog-stat-label">Moyenne</span>
+          </div>
+        </div>
+        ${lastVol > 0 ? `
+        <div style="display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+          <span style="font-size:10px;color:var(--muted);">Vol. séance : <strong style="color:var(--text)">${lastVol.toLocaleString('fr-FR')} kg</strong></span>
+          ${lastAvgReps > 0 ? `<span style="font-size:10px;color:var(--muted);">Moy. reps : <strong style="color:var(--text)">${lastAvgReps}</strong></span>` : ''}
+        </div>` : ''}
+        ${sugg ? `<div class="prog-suggestion"><span>💡</span><span>${sugg}</span></div>` : ''}`;
+
+      // Clic sur une card → sélectionne cet exo dans le sélecteur + scrolle vers historique
+      card.addEventListener('click', () => {
+        document.getElementById('prog-ex-select').value = ex;
+        renderHistoryTable();
+        document.querySelector('.history-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      grid.appendChild(card);
+      cardCount++;
+    });
+
+    // Si certains exercices n'ont pas de données, afficher un placeholder discret
+    const noDataExes = session.exercises.filter(ex => T.getHistory(slug, ex).length === 0);
+    if (noDataExes.length > 0 && cardCount > 0) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'prog-card';
+      placeholder.style.cssText = 'opacity:.4;border-style:dashed;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;min-height:120px;';
+      placeholder.innerHTML = `
+        <div style="font-size:18px;opacity:.5">📭</div>
+        <div style="font-size:11px;color:var(--muted);text-align:center">${noDataExes.length} exercice${noDataExes.length > 1 ? 's' : ''} non encore logué${noDataExes.length > 1 ? 's' : ''}</div>
+        <div style="font-size:10px;color:var(--soft);text-align:center">${noDataExes.join(' · ')}</div>`;
+      grid.appendChild(placeholder);
+    }
+
+    // Si aucun exercice logué pour cette période (mais des données existent globalement)
+    if (cardCount === 0) {
+      grid.innerHTML = `
+        <div class="no-data" style="grid-column:1/-1;">
+          Aucune donnée${_period ? ` sur les ${_period} derniers jours` : ''} pour cette séance.
+          ${_period ? `<br><button onclick="setPeriod(0)" style="margin-top:10px;background:var(--accent);border:none;color:white;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;">Voir tout l'historique</button>` : ''}
+        </div>`;
+    }
+  }
+
+  /* ─── État vide intelligent ────────────────────────────── */
+  function _renderEmptyState(slug) {
+    // Cacher dashboard et indicateur
+    document.getElementById('vol-dashboard').style.display = 'none';
+    document.getElementById('global-indicator').style.display = 'none';
+
+    const grid = document.getElementById('prog-grid');
+    grid.innerHTML = '';
+
+    // Vider ou afficher l'historique vide
+    document.getElementById('hist-title').textContent = 'Historique';
+    document.getElementById('hist-content').innerHTML = '';
+
+    // Injecter ou afficher l'état vide dans la grille
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;padding:48px 24px;">
+        <div class="empty-icon">📭</div>
+        <div class="empty-text">Aucune séance loggée pour <strong>${slug.charAt(0).toUpperCase() + slug.slice(1)}</strong></div>
+        <div style="font-size:12px;color:var(--soft);margin-top:4px;text-align:center;line-height:1.6">
+          Lance ta première séance pour commencer à suivre ta progression.<br>
+          Les données apparaîtront ici automatiquement.
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center;">
+          <a href="seance.html?slug=${slug}" style="background:var(--accent);border:none;color:white;padding:9px 20px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+            ⚡ Lancer la séance
+          </a>
+          <button onclick="switchTab('hub')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 20px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;">
+            🏠 Retour au hub
+          </button>
+          ${T.getAllSessions(SESSIONS, WORKOUTS).length > 1 ? `<button onclick="document.getElementById('prog-session-select').selectedIndex=(document.getElementById('prog-session-select').selectedIndex+1)%${T.getAllSessions(SESSIONS, WORKOUTS).length};renderProgression();" style="background:var(--card);border:1px solid var(--border);color:var(--muted);padding:9px 20px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;">Autre séance →</button>` : ''}
+        </div>
+      </div>`;
+  }
+
+  /* ─── Sparkline SVG ────────────────────────────────────── */
   function buildSparkline(values) {
     const W = 220, H = 56, pad = 4;
     const min = Math.min(...values), max = Math.max(...values);
@@ -478,7 +856,7 @@
       x: pad + (i / (values.length - 1)) * (W - pad * 2),
       y: H - pad - ((v - min) / range) * (H - pad * 2),
     }));
-    const polyPts = pts.map(p => `${p.x},${p.y}`).join(' ');
+    const polyPts  = pts.map(p => `${p.x},${p.y}`).join(' ');
     const areaPath = `M${pts[0].x},${H} ` + pts.map(p => `L${p.x},${p.y}`).join(' ') + ` L${pts[pts.length-1].x},${H} Z`;
     const last  = pts[pts.length - 1];
     const trend = values[values.length-1] >= values[0];
@@ -498,43 +876,56 @@
       </svg>`;
   }
 
+  /* ─── Historique détaillé ──────────────────────────────── */
   function renderHistoryTable() {
     const slug = document.getElementById('prog-session-select').value;
     const ex   = document.getElementById('prog-ex-select').value;
-    if (!ex) return;
-    const history = _filteredHistory(slug, ex);
 
+    if (!ex) {
+      document.getElementById('hist-content').innerHTML = '';
+      return;
+    }
+
+    const history = _filteredHistoryEx(slug, ex);
     document.getElementById('hist-title').textContent = `Historique — ${ex}`;
     const content = document.getElementById('hist-content');
 
     if (!history.length) {
-      content.innerHTML = `<div class="no-data" style="padding:20px 0">Aucune donnée${_period ? ` sur les ${_period} derniers jours` : ''} pour cet exercice.</div>`;
+      const reason = _period
+        ? `Aucune donnée sur les ${_period} derniers jours pour cet exercice.`
+        : `Aucune donnée pour cet exercice.`;
+      content.innerHTML = `
+        <div class="no-data" style="padding:20px 0;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <span>${reason}</span>
+          ${_period ? `<button onclick="setPeriod(0)" style="background:var(--accent);border:none;color:white;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;">Voir tout l'historique</button>` : `<a href="seance.html?slug=${slug}" style="background:var(--accent);border:none;color:white;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none;">Lancer la séance</a>`}
+        </div>`;
       return;
     }
 
-    // Helpers format sets
     const _bestKg   = entry => Math.max(0, ...((entry.sets || []).map(s => parseFloat(s.kg) || 0)));
-    const _totalVol = entry => (entry.sets || []).reduce((sum, s) => sum + (parseFloat(s.kg)||0) * (parseInt(s.reps)||0), 0);
+    const _totalVol = entry => (entry.sets || []).reduce((sum, s) =>
+      sum + (parseFloat(s.kg)||0) * (parseInt(s.reps)||0), 0);
     const _setsSummary = entry => (entry.sets || []).map(s =>
-      `${s.kg ? s.kg+'kg' : '—'} × ${s.reps ? s.reps+'r' : '—'}`
+      `${s.kg != null ? s.kg+'kg' : '—'} × ${s.reps != null ? s.reps+'r' : '—'}${s.rir != null && s.rir !== '' ? ` @${s.rir}` : ''}`
     ).join(' · ');
 
     const maxKg = Math.max(...history.map(_bestKg));
     const rows  = history.map((entry, i) => {
       const prev    = history[i + 1];
       const kg      = _bestKg(entry);
-      const kgPrev  = prev ? _bestKg(prev) : 0;
-      const dKg     = prev ? kg - kgPrev : null;
+      const kgPrev  = prev ? _bestKg(prev) : null;
+      const dKg     = kgPrev !== null ? kg - kgPrev : null;
       const isPR    = kg >= maxKg && kg > 0;
       const vol     = _totalVol(entry);
       const d       = new Date(entry.date);
       const summary = _setsSummary(entry);
+      const setsCount = (entry.sets || []).length;
       return `<tr>
         <td>${d.toLocaleDateString('fr-FR')} <span style="color:var(--soft);font-size:10px">${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span></td>
         <td style="font-weight:700">${kg || '—'} kg</td>
         <td style="font-size:10px;color:var(--muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${summary}">${summary || '—'}</td>
         <td style="color:var(--soft);font-size:11px">${vol ? vol.toLocaleString('fr-FR') + ' kg' : '—'}</td>
-        <td>${isPR ? '<span class="badge-pr">🏆 PR</span>' : dKg !== null ? `<span class="${dKg > 0 ? 'badge-up' : dKg < 0 ? 'badge-down' : ''}">${dKg > 0 ? '+' : ''}${dKg.toFixed(1)} kg</span>` : '—'}</td>
+        <td>${isPR && i === 0 ? '<span class="badge-pr">🏆 PR</span>' : dKg !== null ? `<span class="${dKg > 0 ? 'badge-up' : dKg < 0 ? 'badge-down' : ''}">${dKg > 0 ? '+' : ''}${dKg.toFixed(1)} kg</span>` : i === history.length - 1 ? '<span style="color:var(--soft);font-size:10px">1ère</span>' : '—'}</td>
         <td><button class="hist-del-btn" data-idx="${i}" title="Supprimer cette entrée">🗑</button></td>
       </tr>`;
     }).join('');
@@ -551,7 +942,7 @@
         const all   = T.getHistory(slug, ex);
         const entry = all[idx];
         if (!entry) return;
-        const d = new Date(entry.date).toLocaleDateString('fr-FR');
+        const d  = new Date(entry.date).toLocaleDateString('fr-FR');
         const kg = _bestKg(entry);
         if (!confirm(`Supprimer l'entrée du ${d} ?\nMeilleure charge : ${kg} kg`)) return;
         T.deleteHistoryEntry(slug, ex, idx);
@@ -561,11 +952,14 @@
     });
   }
 
-  /* ── DONNÉES TAB ───────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════
+     DONNÉES TAB
+  ═══════════════════════════════════════════════════════════════ */
   function renderDataTab() {
     const grid = document.getElementById('reset-sessions-grid');
     grid.innerHTML = '';
-    SESSIONS.forEach(s => {
+    const allSessions = T.getAllSessions(SESSIONS, WORKOUTS);
+    allSessions.forEach(s => {
       const btn = document.createElement('button');
       btn.className   = 'btn btn-danger';
       btn.textContent = `🗑 ${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}`;
@@ -573,6 +967,7 @@
         if (!confirm(`Effacer tous les logs de la séance "${s.slug}" ?`)) return;
         T.resetSession(s.slug, s.exercises);
         showToast(`Séance ${s.slug} réinitialisée.`);
+        initHub();
       };
       grid.appendChild(btn);
     });
@@ -585,9 +980,9 @@
     const errorEl  = document.getElementById('import-error');
     resultEl.style.display = errorEl.style.display = 'none';
     T.importJSON(file).then(count => {
-      resultEl.textContent    = `✓ ${count} entrée(s) importée(s) avec succès.`;
-      resultEl.style.display  = 'block';
-      input.value             = '';
+      resultEl.textContent   = `✓ ${count} entrée(s) importée(s) avec succès.`;
+      resultEl.style.display = 'block';
+      input.value            = '';
       initHub();
     }).catch(err => {
       errorEl.textContent   = `✕ Erreur d'import : ${err.message}`;
@@ -602,26 +997,47 @@
     initHub();
   }
 
-  function showToast(msg) {
+  function showToast(msg, type = 'ok') {
     const t = document.createElement('div');
     t.textContent = msg;
-    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#22c55e;color:#0d0d0d;font-weight:700;font-size:13px;padding:10px 22px;border-radius:6px;z-index:9999;';
+    const bg = type === 'err' ? '#ef4444' : '#22c55e';
+    t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${bg};color:#0d0d0d;font-weight:700;font-size:13px;padding:10px 22px;border-radius:6px;z-index:9999;`;
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 2500);
   }
 
-  /* ── INIT ──────────────────────────────────────────────── */
+  async function logout() {
+    if (!window.C) return;
+    await C.signOut();
+    window.location.href = 'auth.html';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     INIT
+  ═══════════════════════════════════════════════════════════════ */
   function init() {
     initHub();
-    const sel = document.getElementById('prog-session-select');
-    sel.innerHTML = SESSIONS.map(s =>
-      `<option value="${s.slug}">${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</option>`).join('');
 
+    // Peupler le sélecteur de séance
+    const sel = document.getElementById('prog-session-select');
+    const allSessions = T.getAllSessions(SESSIONS, WORKOUTS);
+    sel.innerHTML = allSessions.map(s =>
+      `<option value="${s.slug}">${s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</option>`
+    ).join('');
+
+    // Pré-sélectionner la séance avec le plus de données, sinon la première
+    const bestSlug = allSessions.reduce((best, s) => {
+      const count = s.exercises.reduce((a, ex) => a + T.getHistory(s.slug, ex).length, 0);
+      const bestCount = best ? best.exercises.reduce((a, ex) => a + T.getHistory(best.slug, ex).length, 0) : -1;
+      return count > bestCount ? s : best;
+    }, null);
+    if (bestSlug) sel.value = bestSlug.slug;
+
+    // Gestion du paramètre URL ?prog=slug
     const params = new URLSearchParams(window.location.search);
     if (params.get('prog')) {
       const target = params.get('prog');
-      if (SESSIONS.find(s => s.slug === target)) sel.value = target;
-      switchTab('prog');
+      window.location.href = `progression.html${target ? `?session=${encodeURIComponent(target)}` : ''}`;
     }
   }
 
